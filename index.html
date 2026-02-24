@@ -8,209 +8,131 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f1117;
-    --surface: #1a1d27;
-    --surface2: #232638;
-    --accent: #7eb8f7;
-    --accent2: #a78bfa;
-    --accent3: #f9a8d4;
-    --confusion: #fb923c;
-    --success: #6ee7b7;
-    --text: #e8eaf0;
-    --text-muted: #8b90a8;
-    --border: rgba(255,255,255,0.08);
-    --radius: 16px;
-    --radius-sm: 10px;
+    --bg: #0f1117; --surface: #1a1d27; --surface2: #232638;
+    --accent: #7eb8f7; --accent2: #a78bfa; --confusion: #fb923c;
+    --success: #6ee7b7; --text: #e8eaf0; --text-muted: #8b90a8;
+    --border: rgba(255,255,255,0.08); --radius: 16px; --radius-sm: 10px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Atkinson Hyperlegible', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+  body { font-family: 'Atkinson Hyperlegible', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
   body::before {
-    content: '';
-    position: fixed;
-    top: -50%; left: -50%;
-    width: 200%; height: 200%;
+    content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
     background: radial-gradient(ellipse at 30% 20%, rgba(126,184,247,0.06) 0%, transparent 50%),
                 radial-gradient(ellipse at 70% 80%, rgba(167,139,250,0.06) 0%, transparent 50%);
     pointer-events: none; z-index: 0;
   }
   .app { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; padding: 20px 16px 100px; }
-
-.header { text-align: center; padding: 32px 0 24px; }
-.logo {
-font-family: ‘Nunito’, sans-serif; font-size: 2rem; font-weight: 800;
-background: linear-gradient(135deg, var(–accent), var(–accent2));
--webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
-.tagline { font-size: 0.95rem; color: var(–text-muted); margin-top: 6px; }
-
-.session-bar {
-background: var(–surface); border: 1px solid var(–border); border-radius: var(–radius);
-padding: 14px 18px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
-}
-.session-input {
-flex: 1; background: transparent; border: none; color: var(–text);
-font-family: ‘Atkinson Hyperlegible’, sans-serif; font-size: 1rem; outline: none;
-}
-.session-input::placeholder { color: var(–text-muted); }
-.btn-start {
-background: linear-gradient(135deg, var(–accent), var(–accent2));
-border: none; border-radius: var(–radius-sm); color: #0f1117;
-font-family: ‘Nunito’, sans-serif; font-weight: 700; font-size: 0.9rem;
-padding: 10px 20px; cursor: pointer; transition: opacity 0.2s, transform 0.1s; white-space: nowrap;
-}
-.btn-start:hover { opacity: 0.9; transform: scale(1.02); }
-
-.session-indicator { display: none; align-items: center; gap: 8px; font-size: 0.85rem; color: var(–success); font-weight: 600; }
-.session-indicator.visible { display: flex; }
-.dot-live { width: 8px; height: 8px; border-radius: 50%; background: var(–success); animation: blink 2s infinite; }
-@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
-
-.mode-selector {
-display: flex; gap: 8px; margin-bottom: 20px;
-overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;
-}
-.mode-selector::-webkit-scrollbar { display: none; }
-.mode-btn {
-background: var(–surface); border: 1px solid var(–border); border-radius: 50px;
-color: var(–text-muted); font-family: ‘Nunito’, sans-serif; font-weight: 600;
-font-size: 0.85rem; padding: 8px 18px; cursor: pointer; transition: all 0.2s; white-space: nowrap; flex-shrink: 0;
-}
-.mode-btn.active { background: linear-gradient(135deg, rgba(126,184,247,0.2), rgba(167,139,250,0.2)); border-color: var(–accent); color: var(–accent); }
-.mode-btn:hover:not(.active) { border-color: var(–text-muted); color: var(–text); }
-
-.panel { display: none; }
-.panel.active { display: block; animation: fadeIn 0.3s ease; }
-@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-
-.note-area { background: var(–surface); border: 1px solid var(–border); border-radius: var(–radius); padding: 20px; min-height: 320px; }
-.note-textarea {
-width: 100%; min-height: 280px; background: transparent; border: none;
-color: var(–text); font-family: ‘Atkinson Hyperlegible’, sans-serif;
-font-size: 1.05rem; line-height: 1.8; outline: none; resize: none;
-}
-.note-textarea::placeholder { color: var(–text-muted); }
-
-.cornell-grid {
-display: grid; grid-template-columns: 200px 1fr; grid-template-rows: 1fr auto;
-gap: 2px; background: var(–border); border-radius: var(–radius); overflow: hidden; min-height: 400px;
-}
-.cornell-cue { background: var(–surface); padding: 16px; grid-row: 1; grid-column: 1; }
-.cornell-main { background: var(–surface); padding: 16px; grid-row: 1; grid-column: 2; }
-.cornell-summary { background: var(–surface2); padding: 16px; grid-row: 2; grid-column: 1 / 3; }
-.cornell-label {
-font-family: ‘Nunito’, sans-serif; font-size: 0.75rem; font-weight: 700;
-text-transform: uppercase; letter-spacing: 1px; color: var(–accent2); margin-bottom: 10px; display: block;
-}
-.cornell-ta {
-width: 100%; background: transparent; border: none; color: var(–text);
-font-family: ‘Atkinson Hyperlegible’, sans-serif; font-size: 0.95rem;
-line-height: 1.7; outline: none; resize: none; min-height: 200px;
-}
-.cornell-ta.summary { min-height: 80px; }
-.cornell-ta::placeholder { color: var(–text-muted); }
-
-.voice-panel { background: var(–surface); border: 1px solid var(–border); border-radius: var(–radius); padding: 32px 20px; text-align: center; }
-.voice-btn {
-width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(–accent);
-background: rgba(126,184,247,0.1); color: var(–accent); font-size: 2.5rem;
-cursor: pointer; transition: all 0.2s; margin: 0 auto 20px;
-display: flex; align-items: center; justify-content: center;
-}
-.voice-btn:hover { background: rgba(126,184,247,0.2); transform: scale(1.05); }
-.voice-btn.recording { border-color: #ef4444; background: rgba(239,68,68,0.15); color: #ef4444; animation: pulse-rec 1.5s infinite; }
-@keyframes pulse-rec { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); } 50% { box-shadow: 0 0 0 16px rgba(239,68,68,0); } }
-.voice-status { font-size: 0.95rem; color: var(–text-muted); margin-bottom: 16px; }
-.voice-recordings { text-align: left; margin-top: 20px; }
-.recording-item {
-background: var(–surface2); border-radius: var(–radius-sm); padding: 12px 16px;
-margin-bottom: 8px; display: flex; align-items: center; gap: 12px; font-size: 0.9rem;
-}
-.recording-item audio { flex: 1; height: 36px; }
-.rec-time { color: var(–text-muted); font-size: 0.8rem; white-space: nowrap; }
-
-.confusion-zone {
-position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 100;
-}
-.confusion-btn {
-background: linear-gradient(135deg, var(–confusion), #f97316);
-border: none; border-radius: 50px; color: white;
-font-family: ‘Nunito’, sans-serif; font-weight: 800; font-size: 1rem;
-padding: 14px 28px; cursor: pointer;
-box-shadow: 0 4px 24px rgba(251,146,60,0.4);
-transition: all 0.2s; display: flex; align-items: center; gap: 8px;
-}
-.confusion-btn:hover { transform: scale(1.05); box-shadow: 0 6px 32px rgba(251,146,60,0.5); }
-.confusion-btn:active { transform: scale(0.97); }
-.confusion-count { background: rgba(255,255,255,0.25); border-radius: 50px; padding: 2px 10px; font-size: 0.85rem; }
-
-.confusion-log { margin-top: 24px; }
-.section-title {
-font-family: ‘Nunito’, sans-serif; font-weight: 700; font-size: 0.8rem;
-text-transform: uppercase; letter-spacing: 1.5px; color: var(–text-muted); margin-bottom: 12px;
-}
-.confusion-item {
-background: var(–surface); border: 1px solid rgba(251,146,60,0.2);
-border-left: 3px solid var(–confusion); border-radius: var(–radius-sm);
-padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 12px;
-animation: slideIn 0.3s ease;
-}
-@keyframes slideIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
-.confusion-timestamp { font-size: 0.8rem; color: var(–confusion); font-weight: 600; white-space: nowrap; margin-top: 2px; }
-.confusion-note-input {
-flex: 1; background: transparent; border: none; color: var(–text);
-font-family: ‘Atkinson Hyperlegible’, sans-serif; font-size: 0.9rem; outline: none; resize: none; line-height: 1.5;
-}
-.confusion-note-input::placeholder { color: var(–text-muted); font-style: italic; }
-
-.tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-.tool-card {
-background: var(–surface); border: 1px solid var(–border); border-radius: var(–radius);
-padding: 16px; text-decoration: none; color: var(–text); transition: all 0.2s; display: block;
-}
-.tool-card:hover { border-color: var(–accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
-.tool-icon { font-size: 1.8rem; margin-bottom: 8px; }
-.tool-name { font-family: ‘Nunito’, sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
-.tool-desc { font-size: 0.82rem; color: var(–text-muted); line-height: 1.5; }
-.tool-tag { display: inline-block; margin-top: 8px; font-size: 0.72rem; background: rgba(126,184,247,0.12); color: var(–accent); border-radius: 50px; padding: 2px 10px; font-weight: 600; }
-
-.review-section { margin-bottom: 24px; }
-.review-card { background: var(–surface); border: 1px solid var(–border); border-radius: var(–radius); padding: 20px; }
-.review-card h3 { font-family: ‘Nunito’, sans-serif; font-weight: 700; font-size: 1rem; color: var(–accent); margin-bottom: 12px; }
-.review-content { font-size: 0.95rem; line-height: 1.7; color: var(–text-muted); white-space: pre-wrap; word-break: break-word; }
-.export-btn {
-background: var(–surface2); border: 1px solid var(–border); border-radius: var(–radius-sm);
-color: var(–text); font-family: ‘Nunito’, sans-serif; font-weight: 600; font-size: 0.9rem;
-padding: 10px 20px; cursor: pointer; transition: all 0.2s; margin-right: 8px; margin-top: 12px;
-}
-.export-btn:hover { border-color: var(–accent); color: var(–accent); }
-
-.toast {
-position: fixed; top: 24px; right: 24px; background: var(–confusion); color: white;
-font-family: ‘Nunito’, sans-serif; font-weight: 700; font-size: 0.9rem;
-padding: 12px 20px; border-radius: var(–radius-sm); z-index: 200;
-opacity: 0; transform: translateY(-8px); transition: all 0.3s; pointer-events: none;
-}
-.toast.show { opacity: 1; transform: translateY(0); }
-
-.empty-state { text-align: center; padding: 40px 20px; color: var(–text-muted); font-size: 0.95rem; }
-.empty-state .emoji { font-size: 2.5rem; margin-bottom: 12px; display: block; }
-
-*:focus-visible { outline: 2px solid var(–accent); outline-offset: 2px; }
-
-@media (max-width: 560px) {
-.cornell-grid { grid-template-columns: 1fr; }
-.cornell-cue { grid-row: 1; grid-column: 1; }
-.cornell-main { grid-row: 2; grid-column: 1; }
-.cornell-summary { grid-row: 3; grid-column: 1; }
-}
+  .header { text-align: center; padding: 32px 0 24px; }
+  .logo {
+    font-family: 'Nunito', sans-serif; font-size: 2rem; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .tagline { font-size: 0.95rem; color: var(--text-muted); margin-top: 6px; }
+  .session-bar {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 18px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+  }
+  .session-input { flex: 1; background: transparent; border: none; color: var(--text); font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 1rem; outline: none; }
+  .session-input::placeholder { color: var(--text-muted); }
+  .btn-start {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: var(--radius-sm); color: #0f1117;
+    font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.9rem;
+    padding: 10px 20px; cursor: pointer; transition: opacity 0.2s, transform 0.1s; white-space: nowrap;
+  }
+  .btn-start:hover { opacity: 0.9; transform: scale(1.02); }
+  .session-indicator { display: none; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--success); font-weight: 600; }
+  .session-indicator.visible { display: flex; }
+  .dot-live { width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: blink 2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
+  .mode-selector { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .mode-selector::-webkit-scrollbar { display: none; }
+  .mode-btn {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 50px;
+    color: var(--text-muted); font-family: 'Nunito', sans-serif; font-weight: 600;
+    font-size: 0.85rem; padding: 8px 18px; cursor: pointer; transition: all 0.2s; white-space: nowrap; flex-shrink: 0;
+  }
+  .mode-btn.active { background: linear-gradient(135deg, rgba(126,184,247,0.2), rgba(167,139,250,0.2)); border-color: var(--accent); color: var(--accent); }
+  .mode-btn:hover:not(.active) { border-color: var(--text-muted); color: var(--text); }
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
+  .note-area { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; min-height: 320px; }
+  .note-textarea { width: 100%; min-height: 280px; background: transparent; border: none; color: var(--text); font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 1.05rem; line-height: 1.8; outline: none; resize: none; }
+  .note-textarea::placeholder { color: var(--text-muted); }
+  .cornell-grid {
+    display: grid; grid-template-columns: 200px 1fr; grid-template-rows: 1fr auto;
+    gap: 2px; background: var(--border); border-radius: var(--radius); overflow: hidden; min-height: 400px;
+  }
+  .cornell-cue { background: var(--surface); padding: 16px; grid-row: 1; grid-column: 1; }
+  .cornell-main { background: var(--surface); padding: 16px; grid-row: 1; grid-column: 2; }
+  .cornell-summary { background: var(--surface2); padding: 16px; grid-row: 2; grid-column: 1 / 3; }
+  .cornell-label { font-family: 'Nunito', sans-serif; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--accent2); margin-bottom: 10px; display: block; }
+  .cornell-ta { width: 100%; background: transparent; border: none; color: var(--text); font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 0.95rem; line-height: 1.7; outline: none; resize: none; min-height: 200px; }
+  .cornell-ta.summary { min-height: 80px; }
+  .cornell-ta::placeholder { color: var(--text-muted); }
+  .voice-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px 20px; text-align: center; }
+  .voice-btn {
+    width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--accent);
+    background: rgba(126,184,247,0.1); color: var(--accent); font-size: 2.5rem;
+    cursor: pointer; transition: all 0.2s; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+  }
+  .voice-btn:hover { background: rgba(126,184,247,0.2); transform: scale(1.05); }
+  .voice-btn.recording { border-color: #ef4444; background: rgba(239,68,68,0.15); color: #ef4444; animation: pulse-rec 1.5s infinite; }
+  @keyframes pulse-rec { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3)}50%{box-shadow:0 0 0 16px rgba(239,68,68,0)} }
+  .voice-status { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 16px; }
+  .voice-recordings { text-align: left; margin-top: 20px; }
+  .recording-item { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; font-size: 0.9rem; }
+  .recording-item audio { flex: 1; height: 36px; }
+  .rec-time { color: var(--text-muted); font-size: 0.8rem; white-space: nowrap; }
+  .confusion-zone { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 100; }
+  .confusion-btn {
+    background: linear-gradient(135deg, var(--confusion), #f97316);
+    border: none; border-radius: 50px; color: white;
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1rem;
+    padding: 14px 28px; cursor: pointer; box-shadow: 0 4px 24px rgba(251,146,60,0.4);
+    transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+  }
+  .confusion-btn:hover { transform: scale(1.05); box-shadow: 0 6px 32px rgba(251,146,60,0.5); }
+  .confusion-btn:active { transform: scale(0.97); }
+  .confusion-count { background: rgba(255,255,255,0.25); border-radius: 50px; padding: 2px 10px; font-size: 0.85rem; }
+  .confusion-log { margin-top: 24px; }
+  .section-title { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 12px; }
+  .confusion-item {
+    background: var(--surface); border: 1px solid rgba(251,146,60,0.2); border-left: 3px solid var(--confusion);
+    border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 12px;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn { from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)} }
+  .confusion-timestamp { font-size: 0.8rem; color: var(--confusion); font-weight: 600; white-space: nowrap; margin-top: 2px; }
+  .confusion-note-input { flex: 1; background: transparent; border: none; color: var(--text); font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 0.9rem; outline: none; resize: none; line-height: 1.5; }
+  .confusion-note-input::placeholder { color: var(--text-muted); font-style: italic; }
+  .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .tool-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-decoration: none; color: var(--text); transition: all 0.2s; display: block; }
+  .tool-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+  .tool-icon { font-size: 1.8rem; margin-bottom: 8px; }
+  .tool-name { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+  .tool-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+  .tool-tag { display: inline-block; margin-top: 8px; font-size: 0.72rem; background: rgba(126,184,247,0.12); color: var(--accent); border-radius: 50px; padding: 2px 10px; font-weight: 600; }
+  .review-section { margin-bottom: 24px; }
+  .review-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .review-card h3 { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 1rem; color: var(--accent); margin-bottom: 12px; }
+  .review-content { font-size: 0.95rem; line-height: 1.7; color: var(--text-muted); white-space: pre-wrap; word-break: break-word; }
+  .export-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: 'Nunito', sans-serif; font-weight: 600; font-size: 0.9rem; padding: 10px 20px; cursor: pointer; transition: all 0.2s; margin-right: 8px; margin-top: 12px; }
+  .export-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .toast { position: fixed; top: 24px; right: 24px; background: var(--confusion); color: white; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.9rem; padding: 12px 20px; border-radius: var(--radius-sm); z-index: 200; opacity: 0; transform: translateY(-8px); transition: all 0.3s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.95rem; }
+  .empty-state .emoji { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+  *:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 560px) {
+    .cornell-grid { grid-template-columns: 1fr; }
+    .cornell-cue { grid-row: 1; grid-column: 1; }
+    .cornell-main { grid-row: 2; grid-column: 1; }
+    .cornell-summary { grid-row: 3; grid-column: 1; }
+  }
 </style>
-
 </head>
 <body>
 
@@ -222,18 +144,16 @@ opacity: 0; transform: translateY(-8px); transition: all 0.3s; pointer-events: n
 
   <div class="session-bar">
     <input class="session-input" id="sessionName" type="text" placeholder="What are you studying today?" aria-label="Session name" />
-    <div class="session-indicator" id="sessionIndicator">
-      <span class="dot-live"></span> Live
-    </div>
-    <button class="btn-start" id="startBtn" onclick="startSession()">Start Session</button>
+    <div class="session-indicator" id="sessionIndicator"><span class="dot-live"></span> Live</div>
+    <button class="btn-start" id="startBtn">Start Session</button>
   </div>
 
   <div class="mode-selector" role="tablist" aria-label="Note-taking modes">
-    <button class="mode-btn active" role="tab" aria-selected="true" onclick="switchMode('free', this)">✏️ Free Notes</button>
-    <button class="mode-btn" role="tab" aria-selected="false" onclick="switchMode('cornell', this)">📋 Cornell</button>
-    <button class="mode-btn" role="tab" aria-selected="false" onclick="switchMode('voice', this)">🎙️ Voice</button>
-    <button class="mode-btn" role="tab" aria-selected="false" onclick="switchMode('review', this)">🔍 Review</button>
-    <button class="mode-btn" role="tab" aria-selected="false" onclick="switchMode('tools', this)">🔗 Tools</button>
+    <button class="mode-btn active" data-mode="free" role="tab" aria-selected="true">✏️ Free Notes</button>
+    <button class="mode-btn" data-mode="cornell" role="tab" aria-selected="false">📋 Cornell</button>
+    <button class="mode-btn" data-mode="voice" role="tab" aria-selected="false">🎙️ Voice</button>
+    <button class="mode-btn" data-mode="review" role="tab" aria-selected="false">🔍 Review</button>
+    <button class="mode-btn" data-mode="tools" role="tab" aria-selected="false">🔗 Tools</button>
   </div>
 
   <!-- FREE NOTES -->
@@ -269,7 +189,7 @@ opacity: 0; transform: translateY(-8px); transition: all 0.3s; pointer-events: n
 
   <div class="panel" id="panel-voice">
     <div class="voice-panel">
-      <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" aria-label="Record voice note">🎙️</button>
+      <button class="voice-btn" id="voiceBtn" aria-label="Record voice note">🎙️</button>
       <div class="voice-status" id="voiceStatus">Tap to record a voice note</div>
       <p style="font-size:0.85rem;color:var(--text-muted);max-width:320px;margin:0 auto;line-height:1.6;">
         When typing feels like too much — just speak. Your thoughts are valid however they come out.
@@ -299,11 +219,11 @@ opacity: 0; transform: translateY(-8px); transition: all 0.3s; pointer-events: n
       </div>
     </div>
     <div class="review-section">
-      <div class="section-title">🟠 Confusion Moments — find these in your lecture recording</div>
+      <div class="section-title">🟠 Confusion Moments — find these points in your lecture recording</div>
       <div id="review-confusion"></div>
     </div>
-    <button class="export-btn" onclick="copyAllNotes()">📋 Copy All Notes</button>
-    <button class="export-btn" onclick="downloadNotes()">⬇️ Download as Text</button>
+    <button class="export-btn" id="copyBtn">📋 Copy All Notes</button>
+    <button class="export-btn" id="downloadBtn">⬇️ Download as Text</button>
   </div>
 
   <!-- TOOLS -->
@@ -326,7 +246,7 @@ opacity: 0; transform: translateY(-8px); transition: all 0.3s; pointer-events: n
       <a href="https://speechify.com" target="_blank" rel="noopener" class="tool-card">
         <div class="tool-icon">🔊</div>
         <div class="tool-name">Speechify</div>
-        <div class="tool-desc">Turns any text into speech. Research papers, notes, anything. Listen instead of read.</div>
+        <div class="tool-desc">Turns any text into speech. Research papers, notes, anything — listen instead of read.</div>
         <span class="tool-tag">Dyslexia · Autism</span>
       </a>
       <a href="https://www.mindmeister.com" target="_blank" rel="noopener" class="tool-card">
@@ -351,204 +271,218 @@ opacity: 0; transform: translateY(-8px); transition: all 0.3s; pointer-events: n
   </div>
 </div>
 
-<!-- CONFUSION BUTTON -->
-
 <div class="confusion-zone">
-  <button class="confusion-btn" onclick="logConfusion()" aria-label="Log confusion moment — I lost the thread">
-    🤯 Lost the thread
-    <span class="confusion-count" id="confusionCount">0</span>
+  <button class="confusion-btn" id="confusionBtn" aria-label="Log confusion — I lost the thread">
+    🤯 Lost the thread <span class="confusion-count" id="confusionCount">0</span>
   </button>
 </div>
 
-<div class="toast" id="toast">Confusion moment logged ✓</div>
+<div class="toast" id="toast"></div>
 
 <script>
-  let sessionActive = false;
-  let sessionStartTime = null;
-  let confusionPoints = [];
-  let currentMode = 'free';
-  let mediaRecorder = null;
-  let audioChunks = [];
-  let isRecording = false;
-  let recordingCount = 0;
+(function() {
+  var sessionActive = false;
+  var sessionStartTime = null;
+  var confusionPoints = [];
+  var mediaRecorder = null;
+  var audioChunks = [];
+  var isRecording = false;
+  var recordingCount = 0;
 
-  function startSession() {
-    sessionActive = true;
-    sessionStartTime = new Date();
-    const btn = document.getElementById('startBtn');
-    btn.textContent = 'End Session';
-    btn.onclick = endSession;
-    btn.style.background = 'linear-gradient(135deg, #6b7280, #4b5563)';
-    document.getElementById('sessionIndicator').classList.add('visible');
-  }
+  // --- SESSION ---
+  document.getElementById('startBtn').addEventListener('click', function() {
+    if (!sessionActive) {
+      sessionActive = true;
+      sessionStartTime = new Date();
+      this.textContent = 'End Session';
+      this.style.background = 'linear-gradient(135deg, #6b7280, #4b5563)';
+      document.getElementById('sessionIndicator').classList.add('visible');
+    } else {
+      sessionActive = false;
+      this.textContent = 'Start Session';
+      this.style.background = '';
+      document.getElementById('sessionIndicator').classList.remove('visible');
+      buildReview();
+      switchMode('review');
+    }
+  });
 
-  function endSession() {
-    sessionActive = false;
-    const btn = document.getElementById('startBtn');
-    btn.textContent = 'Start Session';
-    btn.onclick = startSession;
-    btn.style.background = '';
-    document.getElementById('sessionIndicator').classList.remove('visible');
-    buildReview();
-    switchMode('review', document.querySelectorAll('.mode-btn')[3]);
-  }
+  // --- MODE TABS ---
+  document.querySelectorAll('.mode-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      switchMode(this.getAttribute('data-mode'));
+    });
+  });
 
-  function switchMode(mode, btn) {
-    currentMode = mode;
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.mode-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+  function switchMode(mode) {
+    document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('.mode-btn').forEach(function(b) {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
     document.getElementById('panel-' + mode).classList.add('active');
-    btn.classList.add('active');
-    btn.setAttribute('aria-selected','true');
+    var activeBtn = document.querySelector('[data-mode="' + mode + '"]');
+    if (activeBtn) { activeBtn.classList.add('active'); activeBtn.setAttribute('aria-selected', 'true'); }
+    if (mode === 'review') buildReview();
   }
 
-  function logConfusion() {
-    const now = new Date();
-    let timeStr;
+  // --- CONFUSION BUTTON ---
+  document.getElementById('confusionBtn').addEventListener('click', function() {
+    var now = new Date();
+    var timeStr;
     if (sessionStartTime) {
-      const elapsed = Math.floor((now - sessionStartTime) / 1000);
-      const m = Math.floor(elapsed / 60).toString().padStart(2,'0');
-      const s = (elapsed % 60).toString().padStart(2,'0');
+      var elapsed = Math.floor((now - sessionStartTime) / 1000);
+      var m = Math.floor(elapsed / 60).toString().padStart(2, '0');
+      var s = (elapsed % 60).toString().padStart(2, '0');
       timeStr = m + ':' + s + ' into session';
     } else {
-      timeStr = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
     }
     confusionPoints.push({ time: timeStr, note: '', id: Date.now() });
-    updateConfusionCount();
-    renderConfusionItems();
-    showToast('Confusion logged \u2713 Go back to your recording at this point');
-  }
-
-  function updateConfusionCount() {
     document.getElementById('confusionCount').textContent = confusionPoints.length;
-  }
+    renderConfusionItems();
+    showToast('Confusion logged ✓ — go back to your recording at this point');
+  });
 
   function renderConfusionItems() {
-    ['confusionLog-free','confusionLog-cornell','confusionLog-voice'].forEach(id => {
-      const el = document.getElementById(id);
+    ['confusionLog-free', 'confusionLog-cornell', 'confusionLog-voice'].forEach(function(id) {
+      var el = document.getElementById(id);
       if (!el) return;
       if (confusionPoints.length === 0) { el.innerHTML = ''; return; }
-      let html = '<div class="section-title" style="margin-top:24px">🟠 Confusion Moments — go back to your lecture recording at these points</div>';
-      confusionPoints.forEach((cp, i) => {
-        html += '<div class="confusion-item"><div class="confusion-timestamp">' + cp.time + '</div>' +
-          '<textarea class="confusion-note-input" placeholder="What were you confused about? Fill in after reviewing your recording..." rows="2" aria-label="Confusion note" onchange="updateConfusionNote(' + i + ', this.value)">' + cp.note + '</textarea></div>';
+      var html = '<div class="section-title" style="margin-top:24px">🟠 Confusion Moments — go back to your lecture recording at these points</div>';
+      confusionPoints.forEach(function(cp, i) {
+        html += '<div class="confusion-item">' +
+          '<div class="confusion-timestamp">' + cp.time + '</div>' +
+          '<textarea class="confusion-note-input" data-index="' + i + '" placeholder="What were you confused about? Fill in after reviewing your recording..." rows="2">' + cp.note + '</textarea>' +
 
 ```
+      '</div>';
   });
   el.innerHTML = html;
+  el.querySelectorAll('.confusion-note-input').forEach(function(ta) {
+    ta.addEventListener('change', function() {
+      var idx = parseInt(this.getAttribute('data-index'));
+      if (confusionPoints[idx]) confusionPoints[idx].note = this.value;
+    });
+  });
 });
 ```
 
 }
 
-function updateConfusionNote(index, value) {
-if (confusionPoints[index]) confusionPoints[index].note = value;
-}
-
-function showToast(msg) {
-const t = document.getElementById(‘toast’);
-t.textContent = msg;
-t.classList.add(‘show’);
-setTimeout(() => t.classList.remove(‘show’), 2800);
-}
-
-function buildReview() {
-document.getElementById(‘review-free’).textContent = document.getElementById(‘freeNotes’).value || ‘No free notes this session.’;
-document.getElementById(‘review-cue’).textContent = document.getElementById(‘cornellCue’).value || ‘—’;
-document.getElementById(‘review-main’).textContent = document.getElementById(‘cornellMain’).value || ‘—’;
-document.getElementById(‘review-summary’).textContent = document.getElementById(‘cornellSummary’).value || ‘—’;
-const confEl = document.getElementById(‘review-confusion’);
-if (confusionPoints.length === 0) {
-confEl.innerHTML = ‘<div class="empty-state"><span class="emoji">\u2713</span>No confusion moments logged this session.</div>’;
-} else {
-let html = ‘’;
-confusionPoints.forEach(cp => {
-html += ‘<div class="confusion-item"><div class="confusion-timestamp">’ + cp.time + ‘</div><div style="font-size:0.9rem;color:var(--text-muted);flex:1">’ + (cp.note || ‘Go back to your recording at this point’) + ‘</div></div>’;
-});
-confEl.innerHTML = html;
-}
-}
-
-function copyAllNotes() {
-const session = document.getElementById(‘sessionName’).value || ‘Session’;
-let text = ’FLUX NOTES \u2014 ’ + session + ‘\n’ + ‘=’.repeat(40) + ‘\n\n’;
-const free = document.getElementById(‘freeNotes’).value;
-if (free) text += ‘FREE NOTES:\n’ + free + ‘\n\n’;
-const cue = document.getElementById(‘cornellCue’).value;
-const main = document.getElementById(‘cornellMain’).value;
-const sum = document.getElementById(‘cornellSummary’).value;
-if (cue || main || sum) text += ’CORNELL METHOD:\nCues: ’ + cue + ’\nNotes: ’ + main + ’\nSummary: ’ + sum + ‘\n\n’;
-if (confusionPoints.length > 0) {
-text += ‘CONFUSION MOMENTS:\n’;
-confusionPoints.forEach(cp => { text += ’\u2022 ’ + cp.time + ’: ’ + (cp.note || ‘Review recording at this point’) + ‘\n’; });
-}
-navigator.clipboard.writeText(text).then(() => showToast(‘Notes copied to clipboard \u2713’));
-}
-
-function downloadNotes() {
-const session = document.getElementById(‘sessionName’).value || ‘flux-notes’;
-let text = ’FLUX NOTES \u2014 ’ + session + ‘\n’ + ‘=’.repeat(40) + ‘\n\n’;
-const free = document.getElementById(‘freeNotes’).value;
-if (free) text += ‘FREE NOTES:\n’ + free + ‘\n\n’;
-const cue = document.getElementById(‘cornellCue’).value;
-const main = document.getElementById(‘cornellMain’).value;
-const sum = document.getElementById(‘cornellSummary’).value;
-if (cue || main || sum) text += ’CORNELL:\nCues: ’ + cue + ’\nNotes: ’ + main + ’\nSummary: ’ + sum + ‘\n\n’;
-if (confusionPoints.length > 0) {
-text += ‘CONFUSION MOMENTS:\n’;
-confusionPoints.forEach(cp => { text += ‘\u2022 ’ + cp.time + ‘: ’ + (cp.note || ‘Review recording’) + ‘\n’; });
-}
-const blob = new Blob([text], {type:‘text/plain’});
-const a = document.createElement(‘a’);
-a.href = URL.createObjectURL(blob);
-a.download = session.replace(/\s+/g,’-’) + ‘-notes.txt’;
-a.click();
-}
-
-async function toggleVoice() {
+// — VOICE RECORDING —
+document.getElementById(‘voiceBtn’).addEventListener(‘click’, function() {
 if (!isRecording) {
-try {
-const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
 mediaRecorder = new MediaRecorder(stream);
 audioChunks = [];
-mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-mediaRecorder.onstop = () => {
-const blob = new Blob(audioChunks, { type: ‘audio/webm’ });
-const url = URL.createObjectURL(blob);
+mediaRecorder.addEventListener(‘dataavailable’, function(e) { audioChunks.push(e.data); });
+mediaRecorder.addEventListener(‘stop’, function() {
+var blob = new Blob(audioChunks, { type: ‘audio/webm’ });
+var url = URL.createObjectURL(blob);
 recordingCount++;
-const now = new Date().toLocaleTimeString([], {hour:‘2-digit’, minute:‘2-digit’});
-const container = document.getElementById(‘voiceRecordings’);
+var now = new Date().toLocaleTimeString([], {hour:‘2-digit’, minute:‘2-digit’});
+var container = document.getElementById(‘voiceRecordings’);
 if (!container.querySelector(’.section-title’)) {
-const title = document.createElement(‘div’);
+var title = document.createElement(‘div’);
 title.className = ‘section-title’;
 title.style.marginBottom = ‘12px’;
 title.textContent = ‘Your voice notes’;
 container.appendChild(title);
 }
-const item = document.createElement(‘div’);
+var item = document.createElement(‘div’);
 item.className = ‘recording-item’;
-item.innerHTML = ‘<span>🎙️ #’ + recordingCount + ‘</span><audio controls src="' + url + '"></audio><span class="rec-time">’ + now + ‘</span>’;
+var audio = document.createElement(‘audio’);
+audio.controls = true;
+audio.src = url;
+item.innerHTML = ‘<span>🎙️ #’ + recordingCount + ‘</span>’;
+item.appendChild(audio);
+var timeEl = document.createElement(‘span’);
+timeEl.className = ‘rec-time’;
+timeEl.textContent = now;
+item.appendChild(timeEl);
 container.appendChild(item);
-stream.getTracks().forEach(t => t.stop());
-};
+stream.getTracks().forEach(function(t) { t.stop(); });
+});
 mediaRecorder.start();
 isRecording = true;
 document.getElementById(‘voiceBtn’).classList.add(‘recording’);
-document.getElementById(‘voiceBtn’).innerHTML = ‘⏹️’;
-document.getElementById(‘voiceBtn’).setAttribute(‘aria-label’, ‘Stop recording’);
-document.getElementById(‘voiceStatus’).textContent = ‘Recording\u2026 tap to stop’;
-} catch(e) {
-document.getElementById(‘voiceStatus’).textContent = ‘Microphone access needed \u2014 check your browser settings’;
-}
+document.getElementById(‘voiceBtn’).textContent = ‘⏹️’;
+document.getElementById(‘voiceStatus’).textContent = ‘Recording… tap to stop’;
+}).catch(function() {
+document.getElementById(‘voiceStatus’).textContent = ‘Microphone access needed — check your browser settings’;
+});
 } else {
 mediaRecorder.stop();
 isRecording = false;
 document.getElementById(‘voiceBtn’).classList.remove(‘recording’);
-document.getElementById(‘voiceBtn’).innerHTML = ‘🎙️’;
-document.getElementById(‘voiceBtn’).setAttribute(‘aria-label’, ‘Record voice note’);
-document.getElementById(‘voiceStatus’).textContent = ‘Saved \u2713 Tap to record another’;
+document.getElementById(‘voiceBtn’).textContent = ‘🎙️’;
+document.getElementById(‘voiceStatus’).textContent = ‘Saved ✓ Tap to record another’;
+}
+});
+
+// — REVIEW —
+function buildReview() {
+document.getElementById(‘review-free’).textContent = document.getElementById(‘freeNotes’).value || ‘No free notes this session.’;
+document.getElementById(‘review-cue’).textContent = document.getElementById(‘cornellCue’).value || ‘—’;
+document.getElementById(‘review-main’).textContent = document.getElementById(‘cornellMain’).value || ‘—’;
+document.getElementById(‘review-summary’).textContent = document.getElementById(‘cornellSummary’).value || ‘—’;
+var confEl = document.getElementById(‘review-confusion’);
+if (confusionPoints.length === 0) {
+confEl.innerHTML = ‘<div class="empty-state"><span class="emoji">✓</span>No confusion moments logged this session.</div>’;
+} else {
+var html = ‘’;
+confusionPoints.forEach(function(cp) {
+html += ‘<div class="confusion-item"><div class="confusion-timestamp">’ + cp.time + ‘</div>’ +
+‘<div style="font-size:0.9rem;color:var(--text-muted);flex:1">’ + (cp.note || ‘Go back to your recording at this point’) + ‘</div></div>’;
+});
+confEl.innerHTML = html;
 }
 }
+
+// — EXPORT —
+document.getElementById(‘copyBtn’).addEventListener(‘click’, function() {
+var text = buildExportText();
+navigator.clipboard.writeText(text).then(function() { showToast(‘Notes copied to clipboard ✓’); });
+});
+
+document.getElementById(‘downloadBtn’).addEventListener(‘click’, function() {
+var session = document.getElementById(‘sessionName’).value || ‘flux-notes’;
+var text = buildExportText();
+var blob = new Blob([text], {type: ‘text/plain’});
+var a = document.createElement(‘a’);
+a.href = URL.createObjectURL(blob);
+a.download = session.replace(/\s+/g, ‘-’) + ‘-notes.txt’;
+a.click();
+});
+
+function buildExportText() {
+var session = document.getElementById(‘sessionName’).value || ‘Session’;
+var text = ’FLUX NOTES — ’ + session + ‘\n’ + ‘=’.repeat(40) + ‘\n\n’;
+var free = document.getElementById(‘freeNotes’).value;
+if (free) text += ‘FREE NOTES:\n’ + free + ‘\n\n’;
+var cue = document.getElementById(‘cornellCue’).value;
+var main = document.getElementById(‘cornellMain’).value;
+var sum = document.getElementById(‘cornellSummary’).value;
+if (cue || main || sum) text += ’CORNELL:\nCues: ’ + cue + ’\nNotes: ’ + main + ’\nSummary: ’ + sum + ‘\n\n’;
+if (confusionPoints.length > 0) {
+text += ‘CONFUSION MOMENTS:\n’;
+confusionPoints.forEach(function(cp) {
+text += ’• ’ + cp.time + ’: ’ + (cp.note || ‘Review recording at this point’) + ‘\n’;
+});
+}
+return text;
+}
+
+// — TOAST —
+function showToast(msg) {
+var t = document.getElementById(‘toast’);
+t.textContent = msg;
+t.classList.add(‘show’);
+setTimeout(function() { t.classList.remove(‘show’); }, 2800);
+}
+
+})();
 </script>
 
 </body>
