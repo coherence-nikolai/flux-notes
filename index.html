@@ -490,593 +490,634 @@ body.day::before{background:radial-gradient(ellipse at 30% 20%,rgba(37,99,235,0.
 <div class="toast" id="toast"></div>
 
 <script>
-(function(){
-'use strict';
+window.addEventListener('load', function() {
+try {
 
-// STATE
-var sessionActive=false,sessionStartTime=null,confusionPoints=[],intentionText='',checkinState='calm';
-var mediaRecorder=null,audioChunks=[],isRecording=false,recordingCount=0;
-var cameraStream=null,sourceCardCount=0,scanCardCount=0;
-var bionicOn=false,rulerOn=false,threeThings=['','',''];
-var audioCtx=null,noiseNode=null,currentNoise='off';
+// ── STATE ──────────────────────────────────────────────
+var sessionActive = false;
+var sessionStartTime = null;
+var confusionPoints = [];
+var intentionText = '';
+var checkinState = 'calm';
+var mediaRecorder = null;
+var audioChunks = [];
+var isRecording = false;
+var recordingCount = 0;
+var cameraStream = null;
+var sourceCardCount = 0;
+var scanCardCount = 0;
+var bionicOn = false;
+var rulerOn = false;
+var threeThings = ['','',''];
+var audioCtx = null;
+var noiseNode = null;
+var isDark = true;
 
-// CHECKIN
-var checkinOverlay=document.getElementById('checkinOverlay');
-document.querySelectorAll('.checkin-opt').forEach(function(o){
-  o.addEventListener('click',function(){
-    document.querySelectorAll('.checkin-opt').forEach(function(x){x.classList.remove('selected');});
-    this.classList.add('selected');
-    checkinState=this.getAttribute('data-state');
+// ── HELPERS ────────────────────────────────────────────
+function el(id) { return document.getElementById(id); }
+
+function tap(id, fn) {
+  var node = el(id);
+  if (!node) return;
+  node.addEventListener('click', fn);
+  node.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    fn.call(this, e);
   });
+}
+
+function tapAll(selector, fn) {
+  document.querySelectorAll(selector).forEach(function(node) {
+    node.addEventListener('click', fn);
+    node.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      fn.call(this, e);
+    });
+  });
+}
+
+function showToast(msg) {
+  var t = el('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2800);
+}
+
+function switchMode(mode) {
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.mode-btn').forEach(function(b) { b.classList.remove('active'); });
+  var panel = el('panel-' + mode);
+  if (panel) panel.classList.add('active');
+  var btn = document.querySelector('[data-mode="' + mode + '"]');
+  if (btn) btn.classList.add('active');
+  if (mode === 'review') buildReview();
+}
+
+// ── CHECK-IN ───────────────────────────────────────────
+tapAll('.checkin-opt', function() {
+  document.querySelectorAll('.checkin-opt').forEach(function(x) { x.classList.remove('selected'); });
+  this.classList.add('selected');
+  checkinState = this.getAttribute('data-state');
 });
-document.getElementById('checkinGo').addEventListener('click',function(){
-  intentionText=document.getElementById('intentionInput').value.trim();
-  checkinOverlay.classList.add('hidden');
-  if(intentionText){
-    var pill=document.getElementById('intentionPill');
-    pill.textContent='📌 '+intentionText;
+
+tap('checkinGo', function() {
+  intentionText = el('intentionInput').value.trim();
+  el('checkinOverlay').classList.add('hidden');
+  if (intentionText) {
+    var pill = el('intentionPill');
+    pill.textContent = '📌 ' + intentionText;
     pill.classList.add('visible');
   }
-  if(checkinState==='overwhelmed'){
-    document.querySelectorAll('.mode-btn').forEach(function(b){
-      var m=b.getAttribute('data-mode');
-      if(m!=='free'&&m!=='review')b.style.opacity='0.4';
+  if (checkinState === 'overwhelmed') {
+    document.querySelectorAll('.mode-btn').forEach(function(b) {
+      var m = b.getAttribute('data-mode');
+      if (m !== 'free' && m !== 'review') b.style.opacity = '0.4';
     });
   }
 });
 
-// THEME
-var isDark=true;
-document.getElementById('themeBtn').addEventListener('click',function(){
-  isDark=!isDark;
-  document.body.classList.toggle('day',!isDark);
-  this.textContent=isDark?'☀️ Day':'🌙 Night';
+// ── THEME ──────────────────────────────────────────────
+tap('themeBtn', function() {
+  isDark = !isDark;
+  document.body.classList.toggle('day', !isDark);
+  el('themeBtn').textContent = isDark ? '☀️ Day' : '🌙 Night';
 });
 
-// AMBIENT SOUND
-document.getElementById('ambientToggle').addEventListener('click',function(){
-  var bar=document.getElementById('ambientBar');
-  bar.classList.toggle('visible');
-  this.classList.toggle('on');
+// ── AMBIENT SOUND ──────────────────────────────────────
+tap('ambientToggle', function() {
+  el('ambientBar').classList.toggle('visible');
+  el('ambientToggle').classList.toggle('on');
 });
-document.querySelectorAll('.ambient-btn').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    document.querySelectorAll('.ambient-btn').forEach(function(b){b.classList.remove('active');});
-    this.classList.add('active');
-    playNoise(this.getAttribute('data-freq'));
-  });
+
+tapAll('.ambient-btn', function() {
+  document.querySelectorAll('.ambient-btn').forEach(function(b) { b.classList.remove('active'); });
+  this.classList.add('active');
+  playNoise(this.getAttribute('data-freq'));
 });
-function playNoise(type){
-  if(noiseNode){noiseNode.stop();noiseNode=null;}
-  if(type==='off'||!type)return;
-  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-  var bufferSize=2*audioCtx.sampleRate;
-  var buffer=audioCtx.createBuffer(1,bufferSize,audioCtx.sampleRate);
-  var data=buffer.getChannelData(0);
-  if(type==='white'){
-    for(var i=0;i<bufferSize;i++)data[i]=Math.random()*2-1;
-  } else {
-    var b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
-    for(var i=0;i<bufferSize;i++){
-      var white=Math.random()*2-1;
-      b0=0.99886*b0+white*0.0555179;b1=0.99332*b1+white*0.0750759;
-      b2=0.96900*b2+white*0.1538520;b3=0.86650*b3+white*0.3104856;
-      b4=0.55000*b4+white*0.5329522;b5=-0.7616*b5-white*0.0168980;
-      data[i]=(b0+b1+b2+b3+b4+b5+b6+white*0.5362)*0.11;b6=white*0.115926;
+
+function playNoise(type) {
+  if (noiseNode) { try { noiseNode.stop(); } catch(e){} noiseNode = null; }
+  if (!type || type === 'off') return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var bufferSize = 2 * audioCtx.sampleRate;
+    var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    var data = buffer.getChannelData(0);
+    if (type === 'white') {
+      for (var i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    } else {
+      var b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+      for (var i = 0; i < bufferSize; i++) {
+        var w = Math.random() * 2 - 1;
+        b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759;
+        b2=0.96900*b2+w*0.1538520; b3=0.86650*b3+w*0.3104856;
+        b4=0.55000*b4+w*0.5329522; b5=-0.7616*b5-w*0.0168980;
+        data[i] = (b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11; b6=w*0.115926;
+      }
     }
-  }
-  var source=audioCtx.createBufferSource();
-  source.buffer=buffer;source.loop=true;
-  var gain=audioCtx.createGain();gain.gain.value=0.15;
-  source.connect(gain);gain.connect(audioCtx.destination);
-  source.start();noiseNode=source;
+    var src = audioCtx.createBufferSource();
+    src.buffer = buffer; src.loop = true;
+    var gain = audioCtx.createGain(); gain.gain.value = 0.15;
+    src.connect(gain); gain.connect(audioCtx.destination);
+    src.start(); noiseNode = src;
+  } catch(e) { showToast('Audio not supported on this device'); }
 }
 
-// SESSION
-document.getElementById('startBtn').addEventListener('click',function(){
-  if(!sessionActive){
-    sessionActive=true;sessionStartTime=new Date();
-    this.textContent='End Session';
-    this.style.background='linear-gradient(135deg,#6b7280,#4b5563)';
-    document.getElementById('sessionIndicator').classList.add('visible');
+// ── SESSION ────────────────────────────────────────────
+tap('startBtn', function() {
+  if (!sessionActive) {
+    sessionActive = true;
+    sessionStartTime = new Date();
+    el('startBtn').textContent = 'End Session';
+    el('startBtn').style.background = 'linear-gradient(135deg,#6b7280,#4b5563)';
+    el('sessionIndicator').classList.add('visible');
   } else {
-    document.getElementById('threeOverlay').classList.remove('hidden');
-    var ir=document.getElementById('intentionReflect');
-    if(intentionText){ir.innerHTML='You wanted to: <strong>'+intentionText+'</strong><br>Did you get there?';ir.style.display='block';}
+    el('threeOverlay').classList.remove('hidden');
+    var ir = el('intentionReflect');
+    if (intentionText) {
+      ir.innerHTML = 'You wanted to: <strong>' + intentionText + '</strong><br>Did you get there?';
+      ir.style.display = 'block';
+    }
   }
 });
 
-// 3 THINGS
-document.getElementById('threeGo').addEventListener('click',function(){
-  threeThings=[document.getElementById('thing1').value,document.getElementById('thing2').value,document.getElementById('thing3').value];
-  document.getElementById('threeOverlay').classList.add('hidden');
-  sessionActive=false;
-  document.getElementById('startBtn').textContent='Start Session';
-  document.getElementById('startBtn').style.background='';
-  document.getElementById('sessionIndicator').classList.remove('visible');
+// ── MODE TABS ──────────────────────────────────────────
+tapAll('.mode-btn', function() {
+  switchMode(this.getAttribute('data-mode'));
+});
+
+// ── 3 THINGS ───────────────────────────────────────────
+tap('threeGo', function() {
+  threeThings = [
+    el('thing1').value,
+    el('thing2').value,
+    el('thing3').value
+  ];
+  el('threeOverlay').classList.add('hidden');
+  sessionActive = false;
+  el('startBtn').textContent = 'Start Session';
+  el('startBtn').style.background = '';
+  el('sessionIndicator').classList.remove('visible');
   buildReview();
   switchMode('review');
 });
 
-// TABS
-document.querySelectorAll('.mode-btn').forEach(function(btn){
-  btn.addEventListener('click',function(){switchMode(this.getAttribute('data-mode'));});
-});
-function switchMode(mode){
-  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
-  document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('active');b.setAttribute('aria-selected','false');});
-  var panel=document.getElementById('panel-'+mode);
-  if(panel)panel.classList.add('active');
-  var btn=document.querySelector('[data-mode="'+mode+'"]');
-  if(btn){btn.classList.add('active');btn.setAttribute('aria-selected','true');}
-  if(mode==='review')buildReview();
-}
-
-// CONFUSION
-document.getElementById('confusionBtn').addEventListener('click',function(){
-  var now=new Date(),timeStr;
-  if(sessionStartTime){
-    var e=Math.floor((now-sessionStartTime)/1000);
-    timeStr=Math.floor(e/60).toString().padStart(2,'0')+':'+( e%60).toString().padStart(2,'0')+' in';
+// ── CONFUSION BUTTON ───────────────────────────────────
+tap('confusionBtn', function() {
+  var now = new Date();
+  var timeStr;
+  if (sessionStartTime) {
+    var e = Math.floor((now - sessionStartTime) / 1000);
+    timeStr = Math.floor(e/60).toString().padStart(2,'0') + ':' + (e%60).toString().padStart(2,'0') + ' in';
   } else {
-    timeStr=now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    timeStr = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   }
-  confusionPoints.push({time:timeStr,note:'',id:Date.now()});
-  document.getElementById('confusionCount').textContent=confusionPoints.length;
+  confusionPoints.push({ time: timeStr, note: '' });
+  el('confusionCount').textContent = confusionPoints.length;
   renderConfusionItems();
-  showToast('Logged ✓ — go back to your recording at this point');
+  showToast('Logged — go back to your recording at this point');
 });
-function renderConfusionItems(){
-  ['confusionLog-free','confusionLog-cornell','confusionLog-voice','confusionLog-scan','confusionLog-research','confusionLog-visual'].forEach(function(id){
-    var el=document.getElementById(id);if(!el)return;
-    if(!confusionPoints.length){el.innerHTML='';return;}
-    var html='<div class="section-title" style="margin-top:20px">🟠 Confusion Moments</div>';
-    confusionPoints.forEach(function(cp,i){
-      html+='<div class="confusion-item"><div class="confusion-timestamp">'+cp.time+'</div><textarea class="confusion-note-input" data-index="'+i+'" placeholder="What confused you? Fill in after…" rows="2">'+cp.note+'</textarea></div>';
+
+function renderConfusionItems() {
+  var ids = ['confusionLog-free','confusionLog-cornell','confusionLog-voice','confusionLog-scan','confusionLog-research','confusionLog-visual'];
+  ids.forEach(function(id) {
+    var node = el(id);
+    if (!node) return;
+    if (!confusionPoints.length) { node.innerHTML = ''; return; }
+    var html = '<div class="section-title" style="margin-top:20px">🟠 Confusion Moments</div>';
+    confusionPoints.forEach(function(cp, i) {
+      html += '<div class="confusion-item"><div class="confusion-timestamp">' + cp.time + '</div>' +
+        '<textarea class="confusion-note-input" data-index="' + i + '" placeholder="What confused you? Fill in after…" rows="2">' + cp.note + '</textarea></div>';
 
 ```
 });
-el.innerHTML=html;
-el.querySelectorAll('.confusion-note-input').forEach(function(ta){
-  ta.addEventListener('change',function(){var idx=parseInt(this.getAttribute('data-index'));if(confusionPoints[idx])confusionPoints[idx].note=this.value;});
+node.innerHTML = html;
+node.querySelectorAll('.confusion-note-input').forEach(function(ta) {
+  ta.addEventListener('change', function() {
+    var idx = parseInt(this.getAttribute('data-index'));
+    if (confusionPoints[idx]) confusionPoints[idx].note = this.value;
+  });
 });
 ```
 
 });
 }
 
-// VOICE
-document.getElementById(‘voiceBtn’).addEventListener(‘click’,function(){
-if(!isRecording){
-navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
-mediaRecorder=new MediaRecorder(stream);audioChunks=[];
-mediaRecorder.addEventListener(‘dataavailable’,function(e){audioChunks.push(e.data);});
-mediaRecorder.addEventListener(‘stop’,function(){
-var blob=new Blob(audioChunks,{type:‘audio/webm’});
-var url=URL.createObjectURL(blob);recordingCount++;
-var now=new Date().toLocaleTimeString([],{hour:‘2-digit’,minute:‘2-digit’});
-var c=document.getElementById(‘voiceRecordings’);
-if(!c.querySelector(’.section-title’)){var t=document.createElement(‘div’);t.className=‘section-title’;t.style.marginBottom=‘10px’;t.textContent=‘Your voice notes’;c.appendChild(t);}
-var item=document.createElement(‘div’);item.className=‘recording-item’;
-var audio=document.createElement(‘audio’);audio.controls=true;audio.src=url;
-item.innerHTML=’<span>🎙️ #’+recordingCount+’</span>’;item.appendChild(audio);
-var te=document.createElement(‘span’);te.className=‘rec-time’;te.textContent=now;item.appendChild(te);
-c.appendChild(item);stream.getTracks().forEach(function(t){t.stop();});
+// ── VOICE ──────────────────────────────────────────────
+tap(‘voiceBtn’, function() {
+if (!isRecording) {
+navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+mediaRecorder = new MediaRecorder(stream);
+audioChunks = [];
+mediaRecorder.addEventListener(‘dataavailable’, function(e) { audioChunks.push(e.data); });
+mediaRecorder.addEventListener(‘stop’, function() {
+var blob = new Blob(audioChunks, { type: ‘audio/webm’ });
+var url = URL.createObjectURL(blob);
+recordingCount++;
+var now = new Date().toLocaleTimeString([], {hour:‘2-digit’,minute:‘2-digit’});
+var c = el(‘voiceRecordings’);
+if (!c.querySelector(’.section-title’)) {
+var t = document.createElement(‘div’);
+t.className = ‘section-title’; t.style.marginBottom = ‘10px’;
+t.textContent = ‘Your voice notes’; c.appendChild(t);
+}
+var item = document.createElement(‘div’); item.className = ‘recording-item’;
+var audio = document.createElement(‘audio’); audio.controls = true; audio.src = url;
+item.innerHTML = ‘<span>🎙️ #’ + recordingCount + ‘</span>’;
+item.appendChild(audio);
+var te = document.createElement(‘span’); te.className = ‘rec-time’; te.textContent = now;
+item.appendChild(te); c.appendChild(item);
+stream.getTracks().forEach(function(t) { t.stop(); });
 });
-mediaRecorder.start();isRecording=true;
-document.getElementById(‘voiceBtn’).classList.add(‘recording’);
-document.getElementById(‘voiceBtn’).textContent=‘⏹️’;
-document.getElementById(‘voiceStatus’).textContent=‘Recording… tap to stop’;
-}).catch(function(){document.getElementById(‘voiceStatus’).textContent=‘Microphone access needed — check browser settings’;});
+mediaRecorder.start(); isRecording = true;
+el(‘voiceBtn’).classList.add(‘recording’);
+el(‘voiceBtn’).textContent = ‘⏹️’;
+el(‘voiceStatus’).textContent = ‘Recording… tap to stop’;
+}).catch(function() {
+el(‘voiceStatus’).textContent = ‘Microphone access needed — check browser settings’;
+});
 } else {
-mediaRecorder.stop();isRecording=false;
-document.getElementById(‘voiceBtn’).classList.remove(‘recording’);
-document.getElementById(‘voiceBtn’).textContent=‘🎙️’;
-document.getElementById(‘voiceStatus’).textContent=‘Saved ✓ Tap to record another’;
+mediaRecorder.stop(); isRecording = false;
+el(‘voiceBtn’).classList.remove(‘recording’);
+el(‘voiceBtn’).textContent = ‘🎙️’;
+el(‘voiceStatus’).textContent = ‘Saved ✓ Tap to record another’;
 }
 });
 
-// CAMERA / SCAN
-document.getElementById(‘startCameraBtn’).addEventListener(‘click’,function(){
-navigator.mediaDevices.getUserMedia({video:{facingMode:‘environment’}}).then(function(stream){
-cameraStream=stream;
-var vid=document.getElementById(‘cameraPreview’);
-vid.srcObject=stream;vid.style.display=‘block’;
-document.getElementById(‘captureBtn’).style.display=‘inline-flex’;
-document.getElementById(‘stopCameraBtn’).style.display=‘inline-flex’;
-document.getElementById(‘startCameraBtn’).style.display=‘none’;
-}).catch(function(){showToast(‘Camera access needed — check browser settings’);});
+// ── SCAN / CAMERA ──────────────────────────────────────
+tap(‘startCameraBtn’, function() {
+navigator.mediaDevices.getUserMedia({ video: { facingMode: ‘environment’ } }).then(function(stream) {
+cameraStream = stream;
+var vid = el(‘cameraPreview’);
+vid.srcObject = stream; vid.style.display = ‘block’;
+el(‘captureBtn’).style.display = ‘inline-flex’;
+el(‘stopCameraBtn’).style.display = ‘inline-flex’;
+el(‘startCameraBtn’).style.display = ‘none’;
+}).catch(function() { showToast(‘Camera access needed — check browser settings’); });
 });
-document.getElementById(‘stopCameraBtn’).addEventListener(‘click’,function(){
-if(cameraStream)cameraStream.getTracks().forEach(function(t){t.stop();});
-document.getElementById(‘cameraPreview’).style.display=‘none’;
-this.style.display=‘none’;
-document.getElementById(‘captureBtn’).style.display=‘none’;
-document.getElementById(‘startCameraBtn’).style.display=‘inline-flex’;
+
+tap(‘stopCameraBtn’, function() {
+if (cameraStream) cameraStream.getTracks().forEach(function(t) { t.stop(); });
+el(‘cameraPreview’).style.display = ‘none’;
+el(‘stopCameraBtn’).style.display = ‘none’;
+el(‘captureBtn’).style.display = ‘none’;
+el(‘startCameraBtn’).style.display = ‘inline-flex’;
 });
-document.getElementById(‘captureBtn’).addEventListener(‘click’,function(){
-var vid=document.getElementById(‘cameraPreview’);
-var canvas=document.getElementById(‘scanCanvas’);
-canvas.width=vid.videoWidth;canvas.height=vid.videoHeight;
-canvas.getContext(‘2d’).drawImage(vid,0,0);
-var imgData=canvas.toDataURL(‘image/png’);
-addScanCard(imgData,‘Scanning… (OCR requires Tesseract.js — see note below)’);
+
+tap(‘captureBtn’, function() {
+var vid = el(‘cameraPreview’);
+var canvas = el(‘scanCanvas’);
+canvas.width = vid.videoWidth; canvas.height = vid.videoHeight;
+canvas.getContext(‘2d’).drawImage(vid, 0, 0);
+addScanCard(canvas.toDataURL(‘image/png’), ‘Captured — add your notes alongside’);
 showToast(‘Slide captured ✓’);
 });
-document.getElementById(‘imageUpload’).addEventListener(‘change’,function(e){
-var file=e.target.files[0];if(!file)return;
-var reader=new FileReader();
-reader.onload=function(ev){addScanCard(ev.target.result,‘Image uploaded — add your notes alongside it’);};
+
+el(‘imageUpload’).addEventListener(‘change’, function(e) {
+var file = e.target.files[0]; if (!file) return;
+var reader = new FileReader();
+reader.onload = function(ev) { addScanCard(ev.target.result, ‘Image uploaded’); };
 reader.readAsDataURL(file);
 });
-function addScanCard(imgSrc,capturedText){
+
+function addScanCard(imgSrc, capturedText) {
 scanCardCount++;
-var container=document.getElementById(‘scanCards’);
-var empty=container.querySelector(’.scan-empty’);
-if(empty)empty.remove();
-var card=document.createElement(‘div’);card.className=‘scan-card’;
-card.innerHTML=’<div class="scan-card-grid">’+
-‘<div class="scan-col"><span class="scan-col-label">📸 Captured (’+scanCardCount+’)</span>’+
-‘<img src="'+imgSrc+'" style="width:100%;border-radius:6px;margin-bottom:8px;max-height:140px;object-fit:contain;">’+
-‘<p class="scan-captured" style="font-size:0.78rem;color:var(--text-muted);">’+capturedText+’</p></div>’+
-‘<div class="scan-col"><span class="scan-col-label">✏️ Your Notes</span>’+
-‘<textarea class="scan-note-ta" placeholder="Add your thoughts, questions, or connections here…"></textarea></div>’+
+var container = el(‘scanCards’);
+var empty = container.querySelector(’.scan-empty’);
+if (empty) empty.remove();
+var card = document.createElement(‘div’); card.className = ‘scan-card’;
+card.innerHTML = ‘<div class="scan-card-grid">’ +
+‘<div class="scan-col"><span class="scan-col-label">📸 Captured (’ + scanCardCount + ‘)</span>’ +
+‘<img src="' + imgSrc + '" style="width:100%;border-radius:6px;margin-bottom:8px;max-height:140px;object-fit:contain;">’ +
+‘<p class="scan-captured" style="font-size:0.78rem;color:var(--text-muted);">’ + capturedText + ‘</p></div>’ +
+‘<div class="scan-col"><span class="scan-col-label">✏️ Your Notes</span>’ +
+‘<textarea class="scan-note-ta" placeholder="Add your thoughts here…"></textarea></div>’ +
 ‘</div>’;
 container.appendChild(card);
 }
 
-// RESEARCH — SOURCE CARDS
-document.getElementById(‘addSourceBtn’).addEventListener(‘click’,function(){addSourceCard();});
-function addSourceCard(){
+// ── RESEARCH ───────────────────────────────────────────
+tap(‘addSourceBtn’, function() { addSourceCard(); });
+
+function addSourceCard() {
 sourceCardCount++;
-var container=document.getElementById(‘sourceCards’);
-var id=‘sc’+sourceCardCount;
-var card=document.createElement(‘div’);card.className=‘source-card’;card.id=id;
-card.innerHTML=
-‘<div class="source-card-header">’+
-‘<select class="source-type-select" id="'+id+'-type">’+
-‘<option>Journal Article</option><option>Book</option><option>Website</option>’+
-‘<option>Book Chapter</option><option>YouTube / Video</option><option>Lecture / Slides</option><option>Other</option>’+
-‘</select>’+
-‘<input class="source-title-input" type="text" placeholder="Source title or URL…">’+
-‘<div class="relevance-btns">’+
-‘<button class="rel-btn" data-rel="green" data-card="'+id+'">🟢</button>’+
-‘<button class="rel-btn" data-rel="amber" data-card="'+id+'">🟡</button>’+
-‘<button class="rel-btn" data-rel="red" data-card="'+id+'">🔴</button>’+
-‘</div>’+
-‘</div>’+
-‘<div class="source-card-body">’+
-‘<div class="source-col">’+
-‘<span class="source-col-label">💬 Direct Quote</span>’+
-‘<textarea class="source-ta" id="'+id+'-quote" placeholder="Copy the exact quote here…"></textarea>’+
-‘<span class="source-col-label" style="margin-top:10px">🔄 In Your Own Words</span>’+
-‘<textarea class="source-ta" id="'+id+'-paraphrase" placeholder="Now say it in your own words — this is where the learning happens…"></textarea>’+
-‘</div>’+
-‘<div class="source-col">’+
-‘<span class="source-col-label">💡 Why This Matters</span>’+
-‘<textarea class="source-ta" id="'+id+'-why" placeholder="Why is this relevant to your assignment question?"></textarea>’+
-‘</div>’+
-‘</div>’+
-‘<div class="source-card-footer">’+
-‘<div class="section-title" style="margin-bottom:8px">📎 APA 7 Reference Builder</div>’+
-‘<div class="apa-fields">’+
-‘<input class="apa-input" id="'+id+'-author" placeholder="Author(s) e.g. Smith, J.">’+
-‘<input class="apa-input" id="'+id+'-year" placeholder="Year e.g. 2023">’+
-‘<input class="apa-input" id="'+id+'-title" placeholder="Title of work">’+
-‘<input class="apa-input" id="'+id+'-journal" placeholder="Journal / Publisher">’+
-‘<input class="apa-input" id="'+id+'-vol" placeholder="Vol(issue), pages">’+
-‘<input class="apa-input" id="'+id+'-doi" placeholder="DOI or URL">’+
-‘</div>’+
-‘<div class="apa-preview" id="'+id+'-preview">Fill in the fields above to generate your APA 7 reference →</div>’+
-‘<div class="apa-resources">’+
-‘<a href="https://owl.purdue.edu/owl/research_and_citation/apa_style/apa_formatting_and_style_guide/general_format.html" target="_blank" rel="noopener" class="apa-link">📚 Purdue OWL</a>’+
-‘<a href="https://apastyle.apa.org" target="_blank" rel="noopener" class="apa-link">🏛️ APA Official</a>’+
-‘<a href="https://www.scribbr.com/apa-citation-generator/" target="_blank" rel="noopener" class="apa-link">⚡ Scribbr Generator</a>’+
-‘</div>’+
+var container = el(‘sourceCards’);
+var id = ‘sc’ + sourceCardCount;
+var card = document.createElement(‘div’); card.className = ‘source-card’; card.id = id;
+card.innerHTML =
+‘<div class="source-card-header">’ +
+‘<select class="source-type-select" id="' + id + '-type">’ +
+‘<option>Journal Article</option><option>Book</option><option>Website</option>’ +
+‘<option>Book Chapter</option><option>YouTube / Video</option><option>Lecture / Slides</option><option>Other</option>’ +
+‘</select>’ +
+‘<input class="source-title-input" type="text" placeholder="Source title or URL…">’ +
+‘<div class="relevance-btns">’ +
+‘<button class="rel-btn" data-rel="green">🟢</button>’ +
+‘<button class="rel-btn" data-rel="amber">🟡</button>’ +
+‘<button class="rel-btn" data-rel="red">🔴</button>’ +
+‘</div>’ +
+‘</div>’ +
+‘<div class="source-card-body">’ +
+‘<div class="source-col">’ +
+‘<span class="source-col-label">💬 Direct Quote</span>’ +
+‘<textarea class="source-ta" id="' + id + '-quote" placeholder="Copy the exact quote here…"></textarea>’ +
+‘<span class="source-col-label" style="margin-top:10px">🔄 In Your Own Words</span>’ +
+‘<textarea class="source-ta" id="' + id + '-paraphrase" placeholder="Say it in your own words…"></textarea>’ +
+‘</div>’ +
+‘<div class="source-col">’ +
+‘<span class="source-col-label">💡 Why This Matters</span>’ +
+‘<textarea class="source-ta" id="' + id + '-why" placeholder="Why relevant to your assignment question?"></textarea>’ +
+‘</div>’ +
+‘</div>’ +
+‘<div class="source-card-footer">’ +
+‘<div class="section-title" style="margin-bottom:8px">📎 APA 7 Reference Builder</div>’ +
+‘<div class="apa-fields">’ +
+‘<input class="apa-input" id="' + id + '-author" placeholder="Author(s) e.g. Smith, J.">’ +
+‘<input class="apa-input" id="' + id + '-year" placeholder="Year e.g. 2023">’ +
+‘<input class="apa-input" id="' + id + '-title" placeholder="Title of work">’ +
+‘<input class="apa-input" id="' + id + '-journal" placeholder="Journal / Publisher">’ +
+‘<input class="apa-input" id="' + id + '-vol" placeholder="Vol(issue), pages">’ +
+‘<input class="apa-input" id="' + id + '-doi" placeholder="DOI or URL">’ +
+‘</div>’ +
+‘<div class="apa-preview" id="' + id + '-preview">Fill in Author, Year and Title to generate APA 7 →</div>’ +
+‘<div class="apa-resources">’ +
+‘<a href="https://owl.purdue.edu/owl/research_and_citation/apa_style/apa_formatting_and_style_guide/general_format.html" target="_blank" rel="noopener" class="apa-link">📚 Purdue OWL</a>’ +
+‘<a href="https://apastyle.apa.org" target="_blank" rel="noopener" class="apa-link">🏛️ APA Official</a>’ +
+‘<a href="https://www.scribbr.com/apa-citation-generator/" target="_blank" rel="noopener" class="apa-link">⚡ Scribbr</a>’ +
+‘</div>’ +
 ‘</div>’;
 container.appendChild(card);
-
-// relevance buttons
-card.querySelectorAll(’.rel-btn’).forEach(function(btn){
-btn.addEventListener(‘click’,function(){
-card.querySelectorAll(’.rel-btn’).forEach(function(b){b.classList.remove(‘active’);});
+card.querySelectorAll(’.rel-btn’).forEach(function(btn) {
+btn.addEventListener(‘click’, function() {
+card.querySelectorAll(’.rel-btn’).forEach(function(b) { b.classList.remove(‘active’); });
 this.classList.add(‘active’);
 });
 });
-
-// APA live preview
-[‘author’,‘year’,‘title’,‘journal’,‘vol’,‘doi’].forEach(function(field){
-var input=document.getElementById(id+’-’+field);
-if(input)input.addEventListener(‘input’,function(){updateAPAPreview(id);});
+[‘author’,‘year’,‘title’,‘journal’,‘vol’,‘doi’].forEach(function(f) {
+var inp = el(id + ‘-’ + f);
+if (inp) inp.addEventListener(‘input’, function() { updateAPA(id); });
 });
-document.getElementById(id+’-type’).addEventListener(‘change’,function(){updateAPAPreview(id);});
+var typeEl = el(id + ‘-type’);
+if (typeEl) typeEl.addEventListener(‘change’, function() { updateAPA(id); });
 }
-function updateAPAPreview(id){
-var author=val(id+’-author’),year=val(id+’-year’),title=val(id+’-title’);
-var journal=val(id+’-journal’),vol=val(id+’-vol’),doi=val(id+’-doi’);
-var type=document.getElementById(id+’-type’)?document.getElementById(id+’-type’).value:‘Journal Article’;
-var preview=’’;
-if(author&&year&&title){
-if(type===‘Journal Article’){
-preview=author+’ (’+year+’). ‘+title+’. <em>’+journal+’</em>’;
-if(vol)preview+=’, ‘+vol;
-if(doi)preview+=’. https://doi.org/’+doi.replace(‘https://doi.org/’,’’);
-} else if(type===‘Book’){
-preview=author+’ (’+year+’). <em>’+title+’</em>. ‘+journal+’.’;
-} else if(type===‘Website’){
-preview=author+’ (’+year+’). ‘+title+’. ‘+journal+’. ‘+doi;
-} else if(type===‘Book Chapter’){
-preview=author+’ (’+year+’). ‘+title+’. In <em>’+journal+’</em> (pp. ‘+vol+’). ‘;
-} else if(type===‘YouTube / Video’){
-preview=author+’ [’+journal+’]. (’+year+’, <em>’+title+’</em>) [Video]. YouTube. ‘+doi;
-} else {
-preview=author+’ (’+year+’). ‘+title+’. ‘+journal+’. ‘+doi;
-}
-} else {
-preview=‘Fill in Author, Year, and Title to generate your APA 7 reference →’;
-}
-var el=document.getElementById(id+’-preview’);
-if(el)el.innerHTML=preview;
-}
-function val(id){var el=document.getElementById(id);return el?el.value.trim():’’;}
 
-// BIONIC READING
-document.getElementById(‘bionicBtn’).addEventListener(‘click’,function(){
-bionicOn=!bionicOn;
-this.classList.toggle(‘on’,bionicOn);
+function getVal(id) { var e = el(id); return e ? e.value.trim() : ‘’; }
+
+function updateAPA(id) {
+var author = getVal(id+’-author’), year = getVal(id+’-year’), title = getVal(id+’-title’);
+var journal = getVal(id+’-journal’), vol = getVal(id+’-vol’), doi = getVal(id+’-doi’);
+var typeEl = el(id+’-type’);
+var type = typeEl ? typeEl.value : ‘Journal Article’;
+var p = ‘’;
+if (author && year && title) {
+if (type === ‘Journal Article’) {
+p = author+’ (’+year+’). ‘+title+’. <em>’+journal+’</em>’;
+if (vol) p += ‘, ‘+vol;
+if (doi) p += ‘. https://doi.org/’+doi.replace(‘https://doi.org/’,’’);
+} else if (type === ‘Book’) {
+p = author+’ (’+year+’). <em>’+title+’</em>. ‘+journal+’.’;
+} else if (type === ‘Website’) {
+p = author+’ (’+year+’). ‘+title+’. ‘+journal+’. ‘+doi;
+} else if (type === ‘Book Chapter’) {
+p = author+’ (’+year+’). ‘+title+’. In <em>’+journal+’</em> (pp. ‘+vol+’).’;
+} else if (type === ‘YouTube / Video’) {
+p = author+’ [’+journal+’]. (’+year+’). <em>’+title+’</em> [Video]. YouTube. ‘+doi;
+} else {
+p = author+’ (’+year+’). ‘+title+’. ‘+journal+’. ‘+doi;
+}
+} else {
+p = ‘Fill in Author, Year and Title to generate APA 7 →’;
+}
+var prev = el(id+’-preview’); if (prev) prev.innerHTML = p;
+}
+
+// ── BIONIC READING ─────────────────────────────────────
+tap(‘bionicBtn’, function() {
+bionicOn = !bionicOn;
+el(‘bionicBtn’).classList.toggle(‘on’, bionicOn);
 buildReview();
 });
-function bionicify(text){
-if(!text||!bionicOn)return escHTML(text);
-return text.split(/\b/).map(function(word){
-if(/[a-zA-Z]/.test(word)&&word.length>1){
-var cut=Math.ceil(word.length*0.45);
-return ‘<b>’+escHTML(word.slice(0,cut))+’</b>’+escHTML(word.slice(cut));
+
+function escHTML(s) {
+return String(s).replace(/&/g,’&’).replace(/</g,’<’).replace(/>/g,’>’);
+}
+
+function bionicify(text) {
+if (!text || !bionicOn) return escHTML(text);
+return text.split(/\b/).map(function(word) {
+if (/[a-zA-Z]/.test(word) && word.length > 1) {
+var cut = Math.ceil(word.length * 0.45);
+return ‘<b>’ + escHTML(word.slice(0,cut)) + ‘</b>’ + escHTML(word.slice(cut));
 }
 return escHTML(word);
 }).join(’’);
 }
-function escHTML(s){return s.replace(/&/g,’&’).replace(/</g,’<’).replace(/>/g,’>’);}
 
-// READING RULER
-document.getElementById(‘rulerBtn’).addEventListener(‘click’,function(){
-rulerOn=!rulerOn;
-this.classList.toggle(‘on’,rulerOn);
-document.querySelectorAll(’.review-content’).forEach(function(el){el.classList.toggle(‘ruler-on’,rulerOn);});
+// ── READING RULER ──────────────────────────────────────
+tap(‘rulerBtn’, function() {
+rulerOn = !rulerOn;
+el(‘rulerBtn’).classList.toggle(‘on’, rulerOn);
+document.querySelectorAll(’.review-content’).forEach(function(e) {
+e.classList.toggle(‘ruler-on’, rulerOn);
+});
 });
 
-// REVIEW
-function buildReview(){
-setReview(‘review-free’,document.getElementById(‘freeNotes’).value||‘No free notes this session.’);
-setReview(‘review-cue’,document.getElementById(‘cornellCue’).value||’—’);
-setReview(‘review-main’,document.getElementById(‘cornellMain’).value||’—’);
-setReview(‘review-summary’,document.getElementById(‘cornellSummary’).value||’—’);
-var three=threeThings.filter(function(t){return t.trim();});
-setReview(‘review-three’,three.length?three.map(function(t,i){return (i+1)+’. ‘+t;}).join(’\n’):‘Not recorded yet.’);
-var confEl=document.getElementById(‘review-confusion’);
-if(!confusionPoints.length){
-confEl.innerHTML=’<p style="color:var(--text-muted);font-size:0.9rem">No confusion moments logged.</p>’;
+// ── REVIEW ─────────────────────────────────────────────
+function setReview(id, text) {
+var node = el(id); if (!node) return;
+node.classList.toggle(‘ruler-on’, rulerOn);
+if (bionicOn) { node.innerHTML = ‘<span class="bionic-word">’ + bionicify(text) + ‘</span>’; }
+else { node.textContent = text; }
+}
+
+function buildReview() {
+setReview(‘review-free’, el(‘freeNotes’).value || ‘No free notes this session.’);
+setReview(‘review-cue’, el(‘cornellCue’).value || ‘—’);
+setReview(‘review-main’, el(‘cornellMain’).value || ‘—’);
+setReview(‘review-summary’, el(‘cornellSummary’).value || ‘—’);
+var three = threeThings.filter(function(t) { return t.trim(); });
+setReview(‘review-three’, three.length ? three.map(function(t,i) { return (i+1)+’. ‘+t; }).join(’\n’) : ‘Not recorded yet.’);
+var confEl = el(‘review-confusion’);
+if (!confusionPoints.length) {
+confEl.innerHTML = ‘<p style="color:var(--text-muted);font-size:0.9rem">No confusion moments logged.</p>’;
 } else {
-confEl.innerHTML=confusionPoints.map(function(cp){
-return ‘<div class="confusion-item"><div class="confusion-timestamp">’+cp.time+’</div><div style="font-size:0.88rem;color:var(--text-muted);flex:1">’+(cp.note||‘Review recording at this point’)+’</div></div>’;
+confEl.innerHTML = confusionPoints.map(function(cp) {
+return ‘<div class="confusion-item"><div class="confusion-timestamp">’+cp.time+’</div>’ +
+‘<div style="font-size:0.88rem;color:var(--text-muted);flex:1">’+(cp.note||‘Review recording at this point’)+’</div></div>’;
 }).join(’’);
 }
 }
-function setReview(id,text){
-var el=document.getElementById(id);if(!el)return;
-el.classList.toggle(‘ruler-on’,rulerOn);
-if(bionicOn){el.innerHTML=’<span class="bionic-word">’+bionicify(text)+’</span>’;}
-else{el.textContent=text;}
-}
 
-// EXPORT
-document.getElementById(‘copyBtn’).addEventListener(‘click’,function(){
-navigator.clipboard.writeText(buildExport()).then(function(){showToast(‘Notes copied ✓’);});
+// ── EXPORT ─────────────────────────────────────────────
+tap(‘copyBtn’, function() {
+navigator.clipboard.writeText(buildExport()).then(function() { showToast(‘Notes copied ✓’); });
 });
-document.getElementById(‘downloadBtn’).addEventListener(‘click’,function(){
-var session=document.getElementById(‘sessionName’).value||‘flux-notes’;
-var blob=new Blob([buildExport()],{type:‘text/plain’});
-var a=document.createElement(‘a’);a.href=URL.createObjectURL(blob);
-a.download=session.replace(/\s+/g,’-’)+’-notes.txt’;a.click();
+
+tap(‘downloadBtn’, function() {
+var session = el(‘sessionName’).value || ‘flux-notes’;
+var blob = new Blob([buildExport()], { type: ‘text/plain’ });
+var a = document.createElement(‘a’);
+a.href = URL.createObjectURL(blob);
+a.download = session.replace(/\s+/g,’-’) + ‘-notes.txt’;
+a.click();
 });
-function buildExport(){
-var session=document.getElementById(‘sessionName’).value||‘Session’;
-var text=‘FLUX NOTES — ‘+session+’\n’+’=’.repeat(40)+’\n\n’;
-if(intentionText)text+=‘INTENTION: ‘+intentionText+’\n\n’;
-var free=document.getElementById(‘freeNotes’).value;
-if(free)text+=‘FREE NOTES:\n’+free+’\n\n’;
-var cue=document.getElementById(‘cornellCue’).value;
-var main=document.getElementById(‘cornellMain’).value;
-var sum=document.getElementById(‘cornellSummary’).value;
-if(cue||main||sum)text+=‘CORNELL:\nCues: ‘+cue+’\nNotes: ‘+main+’\nSummary: ‘+sum+’\n\n’;
-var three=threeThings.filter(function(t){return t.trim();});
-if(three.length)text+=‘3 THINGS I REMEMBERED:\n’+three.map(function(t,i){return (i+1)+’. ‘+t;}).join(’\n’)+’\n\n’;
-if(confusionPoints.length){
-text+=‘CONFUSION MOMENTS:\n’;
-confusionPoints.forEach(function(cp){text+=’• ‘+cp.time+’: ‘+(cp.note||‘Review recording’)+’\n’;});
-text+=’\n’;
+
+function buildExport() {
+var session = el(‘sessionName’).value || ‘Session’;
+var text = ‘FLUX NOTES — ’ + session + ‘\n’ + ‘=’.repeat(40) + ‘\n\n’;
+if (intentionText) text += ‘INTENTION: ’ + intentionText + ‘\n\n’;
+var free = el(‘freeNotes’).value;
+if (free) text += ‘FREE NOTES:\n’ + free + ‘\n\n’;
+var cue = el(‘cornellCue’).value, main = el(‘cornellMain’).value, sum = el(‘cornellSummary’).value;
+if (cue||main||sum) text += ‘CORNELL:\nCues: ‘+cue+’\nNotes: ‘+main+’\nSummary: ‘+sum+’\n\n’;
+var three = threeThings.filter(function(t) { return t.trim(); });
+if (three.length) text += ‘3 THINGS:\n’ + three.map(function(t,i){return (i+1)+’. ‘+t;}).join(’\n’) + ‘\n\n’;
+if (confusionPoints.length) {
+text += ‘CONFUSION MOMENTS:\n’;
+confusionPoints.forEach(function(cp) { text += ‘• ’ + cp.time + ‘: ’ + (cp.note||‘Review recording’) + ‘\n’; });
+text += ‘\n’;
 }
-// Research sources
-var sources=document.querySelectorAll(’.source-card’);
-if(sources.length){
-text+=‘RESEARCH SOURCES:\n’+’—’.repeat(30)+’\n’;
-sources.forEach(function(card,i){
-var id=card.id;
-var titleEl=card.querySelector(’.source-title-input’);
-var quote=document.getElementById(id+’-quote’);
-var para=document.getElementById(id+’-paraphrase’);
-var why=document.getElementById(id+’-why’);
-var preview=document.getElementById(id+’-preview’);
-text+=’\nSource ‘+(i+1)+’: ‘+(titleEl?titleEl.value:’’)+’\n’;
-if(quote&&quote.value)text+=‘Quote: ‘+quote.value+’\n’;
-if(para&&para.value)text+=‘Paraphrase: ‘+para.value+’\n’;
-if(why&&why.value)text+=‘Relevance: ‘+why.value+’\n’;
-if(preview&&preview.textContent&&!preview.textContent.includes(‘Fill in’))text+=‘APA 7: ‘+preview.textContent+’\n’;
+document.querySelectorAll(’.source-card’).forEach(function(card, i) {
+var id = card.id;
+var titleEl = card.querySelector(’.source-title-input’);
+text += ‘\nSource ’ + (i+1) + ‘: ’ + (titleEl ? titleEl.value : ‘’) + ‘\n’;
+var q = el(id+’-quote’), pa = el(id+’-paraphrase’), w = el(id+’-why’), pr = el(id+’-preview’);
+if (q && q.value) text += ’Quote: ’ + q.value + ‘\n’;
+if (pa && pa.value) text += ’Paraphrase: ’ + pa.value + ‘\n’;
+if (w && w.value) text += ’Relevance: ’ + w.value + ‘\n’;
+if (pr && pr.textContent && !pr.textContent.includes(‘Fill in’)) text += ’APA 7: ’ + pr.textContent + ‘\n’;
 });
-}
 return text;
 }
 
-// TOAST — defined here so visual IIFE can call it
-function showToast(msg){
-var t=document.getElementById(‘toast’);
-t.textContent=msg;t.classList.add(‘show’);
-setTimeout(function(){t.classList.remove(‘show’);},2800);
-}
+// ── VISUAL NOTES ───────────────────────────────────────
+var vCanvas = el(‘visualCanvas’);
+var vCtx = vCanvas ? vCanvas.getContext(‘2d’) : null;
+var vWrap = el(‘visualCanvasWrap’);
+var vDrawing = false;
+var vTool = ‘draw’;
+var vColor = ‘#7eb8f7’;
+var vBrush = 6;
+var vLastX = 0, vLastY = 0;
 
-// VISUAL NOTES
-(function(){
-var canvas = document.getElementById(‘visualCanvas’);
-var ctx = canvas.getContext(‘2d’);
-var wrap = document.getElementById(‘visualCanvasWrap’);
-var drawing = false;
-var tool = ‘draw’;
-var color = ‘#7eb8f7’;
-var brushSize = 6;
-var lastX = 0, lastY = 0;
+function vBgColor() { return document.body.classList.contains(‘day’) ? ‘#f5f0e8’ : ‘#0f1117’; }
 
 function resizeCanvas() {
-var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-canvas.width = wrap.offsetWidth;
-canvas.height = Math.max(420, wrap.offsetWidth * 0.6);
-ctx.fillStyle = ‘#0f1117’;
-if (document.body.classList.contains(‘day’)) ctx.fillStyle = ‘#f5f0e8’;
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-if (imageData.width > 0) ctx.putImageData(imageData, 0, 0);
+if (!vCanvas || !vWrap || !vCtx) return;
+var saved = vCtx.getImageData(0, 0, vCanvas.width, vCanvas.height);
+vCanvas.width = vWrap.offsetWidth || 300;
+vCanvas.height = Math.max(400, vCanvas.width * 0.6);
+vCtx.fillStyle = vBgColor();
+vCtx.fillRect(0, 0, vCanvas.width, vCanvas.height);
+if (saved.width > 0) { try { vCtx.putImageData(saved, 0, 0); } catch(e){} }
 }
 resizeCanvas();
 window.addEventListener(‘resize’, resizeCanvas);
 
-// Re-fill background when theme changes
-document.getElementById(‘themeBtn’).addEventListener(‘click’, function() {
+tap(‘themeBtn’, function() {
 setTimeout(function() {
-var tmp = ctx.getImageData(0, 0, canvas.width, canvas.height);
-ctx.fillStyle = document.body.classList.contains(‘day’) ? ‘#f5f0e8’ : ‘#0f1117’;
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-ctx.putImageData(tmp, 0, 0);
-}, 50);
+if (!vCtx || !vCanvas) return;
+var saved = vCtx.getImageData(0, 0, vCanvas.width, vCanvas.height);
+vCtx.fillStyle = vBgColor();
+vCtx.fillRect(0, 0, vCanvas.width, vCanvas.height);
+try { vCtx.putImageData(saved, 0, 0); } catch(e){}
+}, 60);
 });
 
-function getPos(e) {
-var rect = canvas.getBoundingClientRect();
-var scaleX = canvas.width / rect.width;
-var scaleY = canvas.height / rect.height;
+function vGetPos(e) {
+if (!vCanvas) return {x:0,y:0};
+var rect = vCanvas.getBoundingClientRect();
+var scaleX = vCanvas.width / rect.width;
+var scaleY = vCanvas.height / rect.height;
 if (e.touches && e.touches.length) {
-return {
-x: (e.touches[0].clientX - rect.left) * scaleX,
-y: (e.touches[0].clientY - rect.top) * scaleY
-};
+return { x:(e.touches[0].clientX-rect.left)*scaleX, y:(e.touches[0].clientY-rect.top)*scaleY };
 }
-return {
-x: (e.clientX - rect.left) * scaleX,
-y: (e.clientY - rect.top) * scaleY
-};
+return { x:(e.clientX-rect.left)*scaleX, y:(e.clientY-rect.top)*scaleY };
 }
 
-function startDraw(e) {
+if (vCanvas) {
+vCanvas.addEventListener(‘mousedown’, function(e) {
+if (vTool === ‘text’) return;
+vDrawing = true; var p = vGetPos(e); vLastX = p.x; vLastY = p.y;
+vCtx.beginPath();
+vCtx.arc(vLastX, vLastY, (vTool===‘erase’?vBrush*3:vBrush)/2, 0, Math.PI*2);
+vCtx.fillStyle = vTool===‘erase’ ? vBgColor() : vColor;
+vCtx.fill();
+});
+vCanvas.addEventListener(‘mousemove’, function(e) {
+if (!vDrawing) return;
+var p = vGetPos(e);
+vCtx.beginPath(); vCtx.moveTo(vLastX,vLastY); vCtx.lineTo(p.x,p.y);
+vCtx.strokeStyle = vTool===‘erase’ ? vBgColor() : vColor;
+vCtx.lineWidth = vTool===‘erase’ ? vBrush*3 : vBrush;
+vCtx.lineCap = ‘round’; vCtx.lineJoin = ‘round’; vCtx.stroke();
+vLastX = p.x; vLastY = p.y;
+});
+vCanvas.addEventListener(‘mouseup’, function() { vDrawing = false; });
+vCanvas.addEventListener(‘mouseleave’, function() { vDrawing = false; });
+vCanvas.addEventListener(‘touchstart’, function(e) {
 e.preventDefault();
-if (tool === ‘text’) return;
-drawing = true;
-var pos = getPos(e);
-lastX = pos.x; lastY = pos.y;
-ctx.beginPath();
-ctx.arc(lastX, lastY, (tool === ‘erase’ ? brushSize * 3 : brushSize) / 2, 0, Math.PI * 2);
-ctx.fillStyle = tool === ‘erase’ ? (document.body.classList.contains(‘day’) ? ‘#f5f0e8’ : ‘#0f1117’) : color;
-ctx.fill();
-}
-
-function moveDraw(e) {
+if (vTool === ‘text’) return;
+vDrawing = true; var p = vGetPos(e); vLastX = p.x; vLastY = p.y;
+vCtx.beginPath();
+vCtx.arc(vLastX, vLastY, (vTool===‘erase’?vBrush*3:vBrush)/2, 0, Math.PI*2);
+vCtx.fillStyle = vTool===‘erase’ ? vBgColor() : vColor;
+vCtx.fill();
+}, { passive: false });
+vCanvas.addEventListener(‘touchmove’, function(e) {
 e.preventDefault();
-if (!drawing) return;
-var pos = getPos(e);
-ctx.beginPath();
-ctx.moveTo(lastX, lastY);
-ctx.lineTo(pos.x, pos.y);
-ctx.strokeStyle = tool === ‘erase’ ? (document.body.classList.contains(‘day’) ? ‘#f5f0e8’ : ‘#0f1117’) : color;
-ctx.lineWidth = tool === ‘erase’ ? brushSize * 3 : brushSize;
-ctx.lineCap = ‘round’;
-ctx.lineJoin = ‘round’;
-ctx.stroke();
-lastX = pos.x; lastY = pos.y;
+if (!vDrawing) return;
+var p = vGetPos(e);
+vCtx.beginPath(); vCtx.moveTo(vLastX,vLastY); vCtx.lineTo(p.x,p.y);
+vCtx.strokeStyle = vTool===‘erase’ ? vBgColor() : vColor;
+vCtx.lineWidth = vTool===‘erase’ ? vBrush*3 : vBrush;
+vCtx.lineCap = ‘round’; vCtx.lineJoin = ‘round’; vCtx.stroke();
+vLastX = p.x; vLastY = p.y;
+}, { passive: false });
+vCanvas.addEventListener(‘touchend’, function(e) { e.preventDefault(); vDrawing = false; }, { passive: false });
 }
 
-function endDraw(e) {
-e.preventDefault();
-drawing = false;
-}
-
-function handleTextClick(e) {
-if (tool !== ‘text’) return;
-var pos = getPos(e);
-var label = window.prompt(‘Enter your text label:’);
-if (label && label.trim()) {
-ctx.font = brushSize * 3 + ‘px “Atkinson Hyperlegible”, sans-serif’;
-ctx.fillStyle = color;
-ctx.fillText(label.trim(), pos.x, pos.y);
-}
-}
-
-canvas.addEventListener(‘mousedown’, startDraw);
-canvas.addEventListener(‘mousemove’, moveDraw);
-canvas.addEventListener(‘mouseup’, endDraw);
-canvas.addEventListener(‘mouseleave’, endDraw);
-canvas.addEventListener(‘touchstart’, startDraw, { passive: false });
-canvas.addEventListener(‘touchmove’, moveDraw, { passive: false });
-canvas.addEventListener(‘touchend’, endDraw, { passive: false });
-canvas.addEventListener(‘click’, handleTextClick);
-
-// TOOLBAR TOOL BUTTONS
-[‘vt-draw’,‘vt-text’,‘vt-erase’].forEach(function(id) {
-var btn = document.getElementById(id);
-if (!btn) return;
-btn.addEventListener(‘click’, function() {
-tool = id.replace(‘vt-’,’’);
-document.querySelectorAll(’#vt-draw,#vt-text,#vt-erase’).forEach(function(b){ b.classList.remove(‘active’); });
+tapAll(’#vt-draw,#vt-text,#vt-erase’, function() {
+vTool = this.id.replace(‘vt-’,’’);
+document.querySelectorAll(’#vt-draw,#vt-text,#vt-erase’).forEach(function(b) { b.classList.remove(‘active’); });
 this.classList.add(‘active’);
-canvas.style.cursor = tool === ‘erase’ ? ‘cell’ : tool === ‘text’ ? ‘text’ : ‘crosshair’;
-});
-});
-
-// SIZE
-document.getElementById(‘vt-size-select’).addEventListener(‘change’, function() {
-brushSize = parseInt(this.value);
+if (vCanvas) vCanvas.style.cursor = vTool===‘erase’ ? ‘cell’ : vTool===‘text’ ? ‘text’ : ‘crosshair’;
 });
 
-// COLOURS
-document.querySelectorAll(’.vt-color’).forEach(function(el) {
-el.addEventListener(‘click’, function() {
-document.querySelectorAll(’.vt-color’).forEach(function(c){ c.classList.remove(‘active’); });
+var vtSize = el(‘vt-size-select’);
+if (vtSize) vtSize.addEventListener(‘change’, function() { vBrush = parseInt(this.value); });
+
+tapAll(’.vt-color’, function() {
+document.querySelectorAll(’.vt-color’).forEach(function(c) { c.classList.remove(‘active’); });
 this.classList.add(‘active’);
-color = this.getAttribute(‘data-color’);
-});
-});
-
-// CLEAR
-document.getElementById(‘vt-clear’).addEventListener(‘click’, function() {
-if (!window.confirm(‘Clear the whole canvas?’)) return;
-ctx.fillStyle = document.body.classList.contains(‘day’) ? ‘#f5f0e8’ : ‘#0f1117’;
-ctx.fillRect(0, 0, canvas.width, canvas.height);
+vColor = this.getAttribute(‘data-color’);
 });
 
-// SAVE PNG
-document.getElementById(‘vt-save-png’).addEventListener(‘click’, function() {
+tap(‘vt-clear’, function() {
+if (!vCtx || !vCanvas) return;
+vCtx.fillStyle = vBgColor();
+vCtx.fillRect(0, 0, vCanvas.width, vCanvas.height);
+});
+
+tap(‘vt-save-png’, function() {
+if (!vCanvas) return;
 var a = document.createElement(‘a’);
 a.download = ‘flux-visual-notes.png’;
-a.href = canvas.toDataURL(‘image/png’);
+a.href = vCanvas.toDataURL(‘image/png’);
 a.click();
 });
 
-// UPLOAD IMAGE TO CANVAS
-document.getElementById(‘vt-upload’).addEventListener(‘change’, function(e) {
-var file = e.target.files[0];
-if (!file) return;
+var vtUpload = el(‘vt-upload’);
+if (vtUpload) vtUpload.addEventListener(‘change’, function(e) {
+var file = e.target.files[0]; if (!file) return;
 var reader = new FileReader();
 reader.onload = function(ev) {
 var img = new Image();
 img.onload = function() {
-var maxW = canvas.width * 0.6;
+var maxW = vCanvas.width * 0.6;
 var scale = Math.min(maxW / img.width, 1);
-ctx.drawImage(img, 20, 20, img.width * scale, img.height * scale);
+vCtx.drawImage(img, 20, 20, img.width*scale, img.height*scale);
 };
 img.src = ev.target.result;
 };
@@ -1084,61 +1125,49 @@ reader.readAsDataURL(file);
 this.value = ‘’;
 });
 
-// PIXABAY IMAGE SEARCH
-document.getElementById(‘pixabaySearchBtn’).addEventListener(‘click’, function() { doPixabaySearch(); });
-document.getElementById(‘pixabayInput’).addEventListener(‘keydown’, function(e) {
-if (e.key === ‘Enter’) doPixabaySearch();
-});
+tap(‘pixabaySearchBtn’, function() { doPixabaySearch(); });
+var pbInput = el(‘pixabayInput’);
+if (pbInput) pbInput.addEventListener(‘keydown’, function(e) { if (e.key===‘Enter’) doPixabaySearch(); });
 
 function doPixabaySearch() {
-var query = document.getElementById(‘pixabayInput’).value.trim();
+var query = el(‘pixabayInput’) ? el(‘pixabayInput’).value.trim() : ‘’;
 if (!query) return;
-var grid = document.getElementById(‘pixabayGrid’);
+var grid = el(‘pixabayGrid’);
 grid.innerHTML = ‘<div class="pixabay-empty">Searching…</div>’;
 var url = ‘https://pixabay.com/api/?key=46494683-e5e2e2d4a3c28e05f8a8a7d8a&q=’ + encodeURIComponent(query) + ‘&image_type=photo&per_page=18&safesearch=true’;
-fetch(url)
-.then(function(r) { return r.json(); })
-.then(function(data) {
+fetch(url).then(function(r) { return r.json(); }).then(function(data) {
 if (!data.hits || !data.hits.length) {
-grid.innerHTML = ‘<div class="pixabay-empty">No images found — try a different search term.</div>’;
-return;
+grid.innerHTML = ‘<div class="pixabay-empty">No images found — try another term.</div>’; return;
 }
 grid.innerHTML = ‘’;
 data.hits.forEach(function(hit) {
 var img = document.createElement(‘img’);
-img.className = ‘pixabay-img’;
-img.src = hit.previewURL;
-img.alt = hit.tags;
-img.title = ‘Click to add to canvas’;
+img.className = ‘pixabay-img’; img.src = hit.previewURL; img.alt = hit.tags;
 img.addEventListener(‘click’, function() {
-var fullImg = new Image();
-fullImg.crossOrigin = ‘anonymous’;
-fullImg.onload = function() {
-var maxW = canvas.width * 0.45;
-var scale = Math.min(maxW / fullImg.width, 1);
-var x = Math.floor(canvas.width / 2 - (fullImg.width * scale) / 2);
-var y = Math.floor(canvas.height / 2 - (fullImg.height * scale) / 2);
-ctx.drawImage(fullImg, x, y, fullImg.width * scale, fullImg.height * scale);
+var full = new Image(); full.crossOrigin = ‘anonymous’;
+full.onload = function() {
+var maxW = vCanvas.width * 0.45;
+var scale = Math.min(maxW / full.width, 1);
+vCtx.drawImage(full, Math.floor(vCanvas.width/2-full.width*scale/2), Math.floor(vCanvas.height/2-full.height*scale/2), full.width*scale, full.height*scale);
 showToast(‘Image added to canvas ✓’);
 };
-fullImg.onerror = function() {
-showToast(‘Could not load image — try another one’);
-};
-fullImg.src = hit.webformatURL;
+full.onerror = function() { showToast(‘Could not load image — try another’); };
+full.src = hit.webformatURL;
 });
 grid.appendChild(img);
 });
-})
-.catch(function() {
-grid.innerHTML = ‘<div class="pixabay-empty">Search failed — check your connection and try again.</div>’;
+}).catch(function() {
+grid.innerHTML = ‘<div class="pixabay-empty">Search failed — check your connection.</div>’;
 });
 }
-})();
 
-// Add first source card by default
+// ── INIT ───────────────────────────────────────────────
 addSourceCard();
 
-})();
+} catch(err) {
+console.error(‘Flux Notes init error:’, err);
+}
+}); // end window load
 </script>
 
 </body>
