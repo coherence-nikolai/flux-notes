@@ -59,7 +59,8 @@ body.day::before{background:radial-gradient(ellipse at 30% 20%,rgba(37,99,235,0.
 .session-bar{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px;}
 .session-input{flex:1;background:transparent;border:none;color:var(–text);font-family:‘Atkinson Hyperlegible’,sans-serif;font-size:0.95rem;outline:none;}
 .session-input::placeholder{color:var(–text-muted);}
-.intention-pill{background:rgba(126,184,247,0.1);border:1px solid rgba(126,184,247,0.2);border-radius:50px;padding:4px 12px;font-size:0.78rem;color:var(–accent);font-family:‘Nunito’,sans-serif;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;}
+.intention-pill{background:rgba(126,184,247,0.1);border:1px solid rgba(126,184,247,0.2);border-radius:50px;padding:4px 12px;font-size:0.78rem;color:var(–accent);font-family:‘Nunito’,sans-serif;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;display:none;}
+.intention-pill.visible{display:block;}
 .btn-start{background:linear-gradient(135deg,var(–accent),var(–accent2));border:none;border-radius:var(–radius-sm);color:#fff;font-family:‘Nunito’,sans-serif;font-weight:700;font-size:0.85rem;padding:9px 18px;cursor:pointer;white-space:nowrap;transition:opacity 0.2s;}
 .btn-start:hover{opacity:0.9;}
 .session-indicator{display:none;align-items:center;gap:6px;font-size:0.82rem;color:var(–success);font-weight:600;}
@@ -298,7 +299,7 @@ body.day::before{background:radial-gradient(ellipse at 30% 20%,rgba(37,99,235,0.
 
   <div class="session-bar">
     <input class="session-input" id="sessionName" type="text" placeholder="Session name..." aria-label="Session name"/>
-    <div class="intention-pill hidden" id="intentionPill"></div>
+    <div class="intention-pill" id="intentionPill"></div>
     <div class="session-indicator" id="sessionIndicator"><span class="dot-live"></span>Live</div>
     <button class="btn-start" id="startBtn">Start Session</button>
   </div>
@@ -514,14 +515,13 @@ document.getElementById('checkinGo').addEventListener('click',function(){
   if(intentionText){
     var pill=document.getElementById('intentionPill');
     pill.textContent='📌 '+intentionText;
-    pill.classList.remove('hidden');
+    pill.classList.add('visible');
   }
   if(checkinState==='overwhelmed'){
     document.querySelectorAll('.mode-btn').forEach(function(b){
       var m=b.getAttribute('data-mode');
       if(m!=='free'&&m!=='review')b.style.opacity='0.4';
     });
-    showToast('Simplified mode on — just Free Notes and Review available 💙');
   }
 });
 
