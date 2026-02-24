@@ -21,6 +21,7 @@ body.day {
   --border:rgba(0,0,0,0.1);--ruler:rgba(37,99,235,0.1);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
+button,a,[data-mode],[data-state],[data-rel],[data-freq]{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 body{font-family:'Atkinson Hyperlegible',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background 0.3s,color 0.3s;}
 body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;
   background:radial-gradient(ellipse at 30% 20%,rgba(126,184,247,0.06) 0%,transparent 50%),
@@ -483,19 +484,11 @@ function tap(id, fn) {
   var node = el(id);
   if (!node) return;
   node.addEventListener('click', fn);
-  node.addEventListener('touchend', function(e) {
-    e.preventDefault();
-    fn.call(this, e);
-  });
 }
 
 function tapAll(selector, fn) {
   document.querySelectorAll(selector).forEach(function(node) {
     node.addEventListener('click', fn);
-    node.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      fn.call(this, e);
-    });
   });
 }
 
