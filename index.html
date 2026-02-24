@@ -917,6 +917,13 @@ if(preview&&preview.textContent&&!preview.textContent.includes(‘Fill in’))te
 return text;
 }
 
+// TOAST — defined here so visual IIFE can call it
+function showToast(msg){
+var t=document.getElementById(‘toast’);
+t.textContent=msg;t.classList.add(‘show’);
+setTimeout(function(){t.classList.remove(‘show’);},2800);
+}
+
 // VISUAL NOTES
 (function(){
 var canvas = document.getElementById(‘visualCanvas’);
@@ -1127,13 +1134,6 @@ grid.innerHTML = ‘<div class="pixabay-empty">Search failed — check your conn
 });
 }
 })();
-
-// TOAST
-function showToast(msg){
-var t=document.getElementById(‘toast’);
-t.textContent=msg;t.classList.add(‘show’);
-setTimeout(function(){t.classList.remove(‘show’);},2800);
-}
 
 // Add first source card by default
 addSourceCard();
