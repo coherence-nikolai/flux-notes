@@ -7,160 +7,318 @@
 <title>Flux Notes — Your Way of Thinking</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0f1117; --surface: #1a1d27; --surface2: #232638;
-    --accent: #7eb8f7; --accent2: #a78bfa; --confusion: #fb923c;
-    --success: #6ee7b7; --text: #e8eaf0; --text-muted: #8b90a8;
-    --border: rgba(255,255,255,0.08); --radius: 16px; --radius-sm: 10px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Atkinson Hyperlegible', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
-  body::before {
-    content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
-    background: radial-gradient(ellipse at 30% 20%, rgba(126,184,247,0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 80%, rgba(167,139,250,0.06) 0%, transparent 50%);
-    pointer-events: none; z-index: 0;
-  }
-  .app { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; padding: 20px 16px 100px; }
-  .header { text-align: center; padding: 32px 0 24px; }
-  .logo {
-    font-family: 'Nunito', sans-serif; font-size: 2rem; font-weight: 800;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
-  .tagline { font-size: 0.95rem; color: var(--text-muted); margin-top: 6px; }
-  .session-bar {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 14px 18px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
-  }
-  .session-input { flex: 1; background: transparent; border: none; color: var(--text); font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 1rem; outline: none; }
-  .session-input::placeholder { color: var(--text-muted); }
-  .btn-start {
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border: none; border-radius: var(--radius-sm); color: #0f1117;
-    font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.9rem;
-    padding: 10px 20px; cursor: pointer; transition: opacity 0.2s, transform 0.1s; white-space: nowrap;
-  }
-  .btn-start:hover { opacity: 0.9; transform: scale(1.02); }
-  .session-indicator { display: none; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--success); font-weight: 600; }
-  .session-indicator.visible { display: flex; }
-  .dot-live { width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: blink 2s infinite; }
-  @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
-  .mode-selector { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
-  .mode-selector::-webkit-scrollbar { display: none; }
-  .mode-btn {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 50px;
-    color: var(--text-muted); font-family: 'Nunito', sans-serif; font-weight: 600;
-    font-size: 0.85rem; padding: 8px 18px; cursor: pointer; transition: all 0.2s; white-space: nowrap; flex-shrink: 0;
-  }
-  .mode-btn.active { background: linear-gradient(135deg, rgba(126,184,247,0.2), rgba(167,139,250,0.2)); border-color: var(--accent); color: var(--accent); }
-  .mode-btn:hover:not(.active) { border-color: var(--text-muted); color: var(--text); }
-  .panel { display: none; }
-  .panel.active { display: block; animation: fadeIn 0.3s ease; }
-  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
-  .note-area { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; min-height: 320px; }
-  .note-textarea { width: 100%; min-height: 280px; background: transparent; border: none; color: var(--text); font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 1.05rem; line-height: 1.8; outline: none; resize: none; }
-  .note-textarea::placeholder { color: var(--text-muted); }
-  .cornell-grid {
-    display: grid; grid-template-columns: 200px 1fr; grid-template-rows: 1fr auto;
-    gap: 2px; background: var(--border); border-radius: var(--radius); overflow: hidden; min-height: 400px;
-  }
-  .cornell-cue { background: var(--surface); padding: 16px; grid-row: 1; grid-column: 1; }
-  .cornell-main { background: var(--surface); padding: 16px; grid-row: 1; grid-column: 2; }
-  .cornell-summary { background: var(--surface2); padding: 16px; grid-row: 2; grid-column: 1 / 3; }
-  .cornell-label { font-family: 'Nunito', sans-serif; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--accent2); margin-bottom: 10px; display: block; }
-  .cornell-ta { width: 100%; background: transparent; border: none; color: var(--text); font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 0.95rem; line-height: 1.7; outline: none; resize: none; min-height: 200px; }
-  .cornell-ta.summary { min-height: 80px; }
-  .cornell-ta::placeholder { color: var(--text-muted); }
-  .voice-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px 20px; text-align: center; }
-  .voice-btn {
-    width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--accent);
-    background: rgba(126,184,247,0.1); color: var(--accent); font-size: 2.5rem;
-    cursor: pointer; transition: all 0.2s; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
-  }
-  .voice-btn:hover { background: rgba(126,184,247,0.2); transform: scale(1.05); }
-  .voice-btn.recording { border-color: #ef4444; background: rgba(239,68,68,0.15); color: #ef4444; animation: pulse-rec 1.5s infinite; }
-  @keyframes pulse-rec { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3)}50%{box-shadow:0 0 0 16px rgba(239,68,68,0)} }
-  .voice-status { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 16px; }
-  .voice-recordings { text-align: left; margin-top: 20px; }
-  .recording-item { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; font-size: 0.9rem; }
-  .recording-item audio { flex: 1; height: 36px; }
-  .rec-time { color: var(--text-muted); font-size: 0.8rem; white-space: nowrap; }
-  .confusion-zone { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 100; }
-  .confusion-btn {
-    background: linear-gradient(135deg, var(--confusion), #f97316);
-    border: none; border-radius: 50px; color: white;
-    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1rem;
-    padding: 14px 28px; cursor: pointer; box-shadow: 0 4px 24px rgba(251,146,60,0.4);
-    transition: all 0.2s; display: flex; align-items: center; gap: 8px;
-  }
-  .confusion-btn:hover { transform: scale(1.05); box-shadow: 0 6px 32px rgba(251,146,60,0.5); }
-  .confusion-btn:active { transform: scale(0.97); }
-  .confusion-count { background: rgba(255,255,255,0.25); border-radius: 50px; padding: 2px 10px; font-size: 0.85rem; }
-  .confusion-log { margin-top: 24px; }
-  .section-title { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 12px; }
-  .confusion-item {
-    background: var(--surface); border: 1px solid rgba(251,146,60,0.2); border-left: 3px solid var(--confusion);
-    border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 12px;
-    animation: slideIn 0.3s ease;
-  }
-  @keyframes slideIn { from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)} }
-  .confusion-timestamp { font-size: 0.8rem; color: var(--confusion); font-weight: 600; white-space: nowrap; margin-top: 2px; }
-  .confusion-note-input { flex: 1; background: transparent; border: none; color: var(--text); font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 0.9rem; outline: none; resize: none; line-height: 1.5; }
-  .confusion-note-input::placeholder { color: var(--text-muted); font-style: italic; }
-  .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-  .tool-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-decoration: none; color: var(--text); transition: all 0.2s; display: block; }
-  .tool-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
-  .tool-icon { font-size: 1.8rem; margin-bottom: 8px; }
-  .tool-name { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
-  .tool-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
-  .tool-tag { display: inline-block; margin-top: 8px; font-size: 0.72rem; background: rgba(126,184,247,0.12); color: var(--accent); border-radius: 50px; padding: 2px 10px; font-weight: 600; }
-  .review-section { margin-bottom: 24px; }
-  .review-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
-  .review-card h3 { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 1rem; color: var(--accent); margin-bottom: 12px; }
-  .review-content { font-size: 0.95rem; line-height: 1.7; color: var(--text-muted); white-space: pre-wrap; word-break: break-word; }
-  .export-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: 'Nunito', sans-serif; font-weight: 600; font-size: 0.9rem; padding: 10px 20px; cursor: pointer; transition: all 0.2s; margin-right: 8px; margin-top: 12px; }
-  .export-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .toast { position: fixed; top: 24px; right: 24px; background: var(--confusion); color: white; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.9rem; padding: 12px 20px; border-radius: var(--radius-sm); z-index: 200; opacity: 0; transform: translateY(-8px); transition: all 0.3s; pointer-events: none; }
-  .toast.show { opacity: 1; transform: translateY(0); }
-  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.95rem; }
-  .empty-state .emoji { font-size: 2.5rem; margin-bottom: 12px; display: block; }
-  *:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  @media (max-width: 560px) {
-    .cornell-grid { grid-template-columns: 1fr; }
-    .cornell-cue { grid-row: 1; grid-column: 1; }
-    .cornell-main { grid-row: 2; grid-column: 1; }
-    .cornell-summary { grid-row: 3; grid-column: 1; }
-  }
+:root {
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#232638;
+  --accent:#7eb8f7;--accent2:#a78bfa;--confusion:#fb923c;
+  --success:#6ee7b7;--text:#e8eaf0;--text-muted:#8b90a8;
+  --border:rgba(255,255,255,0.08);--radius:16px;--radius-sm:10px;
+  --ruler:rgba(126,184,247,0.13);
+}
+body.day {
+  --bg:#f5f0e8;--surface:#fff;--surface2:#f0ebe0;
+  --accent:#2563eb;--accent2:#7c3aed;--confusion:#ea580c;
+  --success:#059669;--text:#1a1a2e;--text-muted:#6b7280;
+  --border:rgba(0,0,0,0.1);--ruler:rgba(37,99,235,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Atkinson Hyperlegible',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background 0.3s,color 0.3s;}
+body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(ellipse at 30% 20%,rgba(126,184,247,0.06) 0%,transparent 50%),
+             radial-gradient(ellipse at 70% 80%,rgba(167,139,250,0.06) 0%,transparent 50%);
+  pointer-events:none;z-index:0;}
+body.day::before{background:radial-gradient(ellipse at 30% 20%,rgba(37,99,235,0.04) 0%,transparent 50%);}
+.app{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:16px 16px 110px;}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 0 8px;}
+.logo{font-family:‘Nunito’,sans-serif;font-size:1.6rem;font-weight:800;background:linear-gradient(135deg,var(–accent),var(–accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.top-controls{display:flex;gap:8px;align-items:center;}
+.icon-btn{background:var(–surface);border:1px solid var(–border);border-radius:50px;padding:7px 14px;cursor:pointer;font-size:0.85rem;color:var(–text-muted);font-family:‘Nunito’,sans-serif;font-weight:600;transition:all 0.2s;white-space:nowrap;}
+.icon-btn:hover{border-color:var(–accent);color:var(–accent);}
+.icon-btn.on{border-color:var(–accent);color:var(–accent);background:rgba(126,184,247,0.1);}
+
+/* CHECK-IN OVERLAY */
+.checkin-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;}
+.checkin-overlay.hidden{display:none;}
+.checkin-box{background:var(–surface);border-radius:var(–radius);padding:32px;max-width:420px;width:100%;text-align:center;}
+.checkin-box h2{font-family:‘Nunito’,sans-serif;font-weight:800;font-size:1.3rem;margin-bottom:8px;}
+.checkin-box p{color:var(–text-muted);font-size:0.9rem;margin-bottom:24px;line-height:1.6;}
+.checkin-options{display:flex;gap:12px;justify-content:center;margin-bottom:24px;flex-wrap:wrap;}
+.checkin-opt{background:var(–surface2);border:2px solid var(–border);border-radius:var(–radius);padding:14px 18px;cursor:pointer;font-size:1.5rem;transition:all 0.2s;flex:1;min-width:80px;}
+.checkin-opt:hover{border-color:var(–accent);transform:scale(1.05);}
+.checkin-opt.selected{border-color:var(–accent);background:rgba(126,184,247,0.1);}
+.checkin-opt span{display:block;font-family:‘Nunito’,sans-serif;font-size:0.75rem;font-weight:600;color:var(–text-muted);margin-top:4px;}
+.intention-area{margin-bottom:20px;text-align:left;}
+.intention-label{font-family:‘Nunito’,sans-serif;font-size:0.8rem;font-weight:700;color:var(–accent);margin-bottom:8px;display:block;text-transform:uppercase;letter-spacing:1px;}
+.intention-input{width:100%;background:var(–surface2);border:1px solid var(–border);border-radius:var(–radius-sm);padding:12px;color:var(–text);font-family:‘Atkinson Hyperlegible’,sans-serif;font-size:0.95rem;outline:none;resize:none;}
+.intention-input::placeholder{color:var(–text-muted);}
+.btn-go{background:linear-gradient(135deg,var(–accent),var(–accent2));border:none;border-radius:var(–radius-sm);color:#fff;font-family:‘Nunito’,sans-serif;font-weight:800;font-size:1rem;padding:12px 32px;cursor:pointer;width:100%;transition:opacity 0.2s;}
+.btn-go:hover{opacity:0.9;}
+
+/* SESSION BAR */
+.session-bar{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.session-input{flex:1;background:transparent;border:none;color:var(–text);font-family:‘Atkinson Hyperlegible’,sans-serif;font-size:0.95rem;outline:none;}
+.session-input::placeholder{color:var(–text-muted);}
+.intention-pill{background:rgba(126,184,247,0.1);border:1px solid rgba(126,184,247,0.2);border-radius:50px;padding:4px 12px;font-size:0.78rem;color:var(–accent);font-family:‘Nunito’,sans-serif;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;}
+.btn-start{background:linear-gradient(135deg,var(–accent),var(–accent2));border:none;border-radius:var(–radius-sm);color:#fff;font-family:‘Nunito’,sans-serif;font-weight:700;font-size:0.85rem;padding:9px 18px;cursor:pointer;white-space:nowrap;transition:opacity 0.2s;}
+.btn-start:hover{opacity:0.9;}
+.session-indicator{display:none;align-items:center;gap:6px;font-size:0.82rem;color:var(–success);font-weight:600;}
+.session-indicator.visible{display:flex;}
+.dot-live{width:7px;height:7px;border-radius:50%;background:var(–success);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* AMBIENT SOUND */
+.ambient-bar{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);padding:10px 16px;display:none;align-items:center;gap:10px;margin-bottom:16px;font-size:0.85rem;color:var(–text-muted);}
+.ambient-bar.visible{display:flex;}
+.ambient-btn{background:var(–surface2);border:1px solid var(–border);border-radius:50px;padding:5px 12px;cursor:pointer;font-size:0.8rem;color:var(–text-muted);font-family:‘Nunito’,sans-serif;font-weight:600;transition:all 0.2s;}
+.ambient-btn.active{border-color:var(–accent);color:var(–accent);}
+
+/* TABS */
+.mode-selector{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.mode-selector::-webkit-scrollbar{display:none;}
+.mode-btn{background:var(–surface);border:1px solid var(–border);border-radius:50px;color:var(–text-muted);font-family:‘Nunito’,sans-serif;font-weight:600;font-size:0.82rem;padding:7px 16px;cursor:pointer;transition:all 0.2s;white-space:nowrap;flex-shrink:0;}
+.mode-btn.active{background:linear-gradient(135deg,rgba(126,184,247,0.2),rgba(167,139,250,0.2));border-color:var(–accent);color:var(–accent);}
+.mode-btn:hover:not(.active){border-color:var(–text-muted);color:var(–text);}
+
+/* PANELS */
+.panel{display:none;}
+.panel.active{display:block;animation:fadeIn 0.25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* NOTE AREAS */
+.note-area{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);padding:18px;min-height:300px;}
+.note-textarea{width:100%;min-height:260px;background:transparent;border:none;color:var(–text);font-family:‘Atkinson Hyperlegible’,sans-serif;font-size:1.05rem;line-height:1.85;outline:none;resize:none;}
+.note-textarea::placeholder{color:var(–text-muted);}
+
+/* CORNELL */
+.cornell-grid{display:grid;grid-template-columns:210px 1fr;grid-template-rows:1fr auto;gap:2px;background:var(–border);border-radius:var(–radius);overflow:hidden;min-height:380px;}
+.cornell-cue{background:var(–surface);padding:14px;grid-row:1;grid-column:1;}
+.cornell-main{background:var(–surface);padding:14px;grid-row:1;grid-column:2;}
+.cornell-summary{background:var(–surface2);padding:14px;grid-row:2;grid-column:1/3;}
+.cornell-label{font-family:‘Nunito’,sans-serif;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(–accent2);margin-bottom:8px;display:block;}
+.cornell-ta{width:100%;background:transparent;border:none;color:var(–text);font-family:‘Atkinson Hyperlegible’,sans-serif;font-size:0.92rem;line-height:1.7;outline:none;resize:none;min-height:180px;}
+.cornell-ta.summary{min-height:70px;}
+.cornell-ta::placeholder{color:var(–text-muted);}
+
+/* VOICE */
+.voice-panel{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);padding:28px 20px;text-align:center;}
+.voice-btn{width:90px;height:90px;border-radius:50%;border:3px solid var(–accent);background:rgba(126,184,247,0.1);font-size:2.2rem;cursor:pointer;transition:all 0.2s;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;}
+.voice-btn:hover{background:rgba(126,184,247,0.2);transform:scale(1.05);}
+.voice-btn.recording{border-color:#ef4444;background:rgba(239,68,68,0.15);animation:pulse-rec 1.5s infinite;}
+@keyframes pulse-rec{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3)}50%{box-shadow:0 0 0 14px rgba(239,68,68,0)}}
+.voice-status{font-size:0.9rem;color:var(–text-muted);margin-bottom:14px;}
+.voice-recordings{text-align:left;margin-top:16px;}
+.recording-item{background:var(–surface2);border-radius:var(–radius-sm);padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;font-size:0.88rem;}
+.recording-item audio{flex:1;height:34px;}
+.rec-time{color:var(–text-muted);font-size:0.78rem;white-space:nowrap;}
+
+/* SCAN */
+.scan-panel{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);padding:20px;}
+.scan-header{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.btn-scan{background:linear-gradient(135deg,var(–accent),var(–accent2));border:none;border-radius:var(–radius-sm);color:#fff;font-family:‘Nunito’,sans-serif;font-weight:700;font-size:0.9rem;padding:10px 20px;cursor:pointer;transition:opacity 0.2s;}
+.btn-scan:hover{opacity:0.9;}
+.btn-secondary{background:var(–surface2);border:1px solid var(–border);border-radius:var(–radius-sm);color:var(–text);font-family:‘Nunito’,sans-serif;font-weight:600;font-size:0.88rem;padding:10px 18px;cursor:pointer;transition:all 0.2s;}
+.btn-secondary:hover{border-color:var(–accent);color:var(–accent);}
+#cameraPreview{width:100%;border-radius:var(–radius-sm);margin-bottom:12px;display:none;max-height:220px;object-fit:cover;}
+#scanCanvas{display:none;}
+.scan-cards{margin-top:4px;}
+.scan-card{background:var(–surface2);border:1px solid var(–border);border-radius:var(–radius-sm);margin-bottom:12px;overflow:hidden;}
+.scan-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+.scan-col{padding:12px;}
+.scan-col:first-child{border-right:1px solid var(–border);}
+.scan-col-label{font-family:‘Nunito’,sans-serif;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(–accent2);margin-bottom:6px;display:block;}
+.scan-captured{font-size:0.85rem;line-height:1.6;color:var(–text-muted);white-space:pre-wrap;}
+.scan-note-ta{width:100%;background:transparent;border:none;color:var(–text);font-family:‘Atkinson Hyperlegible’,sans-serif;font-size:0.88rem;line-height:1.6;outline:none;resize:none;min-height:80px;}
+.scan-note-ta::placeholder{color:var(–text-muted);}
+.scan-empty{text-align:center;padding:32px;color:var(–text-muted);font-size:0.9rem;}
+
+/* RESEARCH */
+.research-anchor{background:linear-gradient(135deg,rgba(126,184,247,0.1),rgba(167,139,250,0.1));border:1px solid rgba(126,184,247,0.25);border-radius:var(–radius);padding:14px 16px;margin-bottom:16px;position:sticky;top:0;z-index:10;}
+.anchor-label{font-family:‘Nunito’,sans-serif;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(–accent);margin-bottom:6px;display:block;}
+.anchor-input{width:100%;background:transparent;border:none;color:var(–text);font-family:‘Atkinson Hyperlegible’,sans-serif;font-size:1rem;font-weight:700;outline:none;}
+.anchor-input::placeholder{color:var(–text-muted);font-weight:400;}
+.source-cards{margin-bottom:16px;}
+.source-card{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);margin-bottom:14px;overflow:hidden;}
+.source-card-header{padding:12px 16px;background:var(–surface2);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.source-type-select{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius-sm);color:var(–text);font-family:‘Nunito’,sans-serif;font-size:0.8rem;padding:4px 8px;outline:none;cursor:pointer;}
+.source-title-input{flex:1;background:transparent;border:none;color:var(–text);font-family:‘Atkinson Hyperlegible’,sans-serif;font-size:0.9rem;outline:none;min-width:120px;}
+.source-title-input::placeholder{color:var(–text-muted);}
+.relevance-btns{display:flex;gap:4px;}
+.rel-btn{background:var(–surface);border:1px solid var(–border);border-radius:50px;padding:3px 10px;font-size:0.75rem;cursor:pointer;font-family:‘Nunito’,sans-serif;font-weight:600;transition:all 0.2s;}
+.rel-btn[data-rel=“green”].active{background:#dcfce7;border-color:#16a34a;color:#16a34a;}
+.rel-btn[data-rel=“amber”].active{background:#fef3c7;border-color:#d97706;color:#d97706;}
+.rel-btn[data-rel=“red”].active{background:#fee2e2;border-color:#dc2626;color:#dc2626;}
+.source-card-body{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+.source-col{padding:12px 16px;}
+.source-col:first-child{border-right:1px solid var(–border);}
+.source-col-label{font-family:‘Nunito’,sans-serif;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(–accent2);margin-bottom:6px;display:block;}
+.source-ta{width:100%;background:transparent;border:none;color:var(–text);font-family:‘Atkinson Hyperlegible’,sans-serif;font-size:0.88rem;line-height:1.6;outline:none;resize:none;min-height:80px;}
+.source-ta::placeholder{color:var(–text-muted);}
+.source-card-footer{padding:10px 16px;background:var(–surface2);border-top:1px solid var(–border);}
+.apa-preview{font-size:0.82rem;color:var(–text-muted);font-style:italic;line-height:1.5;}
+.apa-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:10px;}
+.apa-input{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius-sm);padding:7px 10px;color:var(–text);font-family:‘Atkinson Hyperlegible’,sans-serif;font-size:0.82rem;outline:none;width:100%;}
+.apa-input::placeholder{color:var(–text-muted);}
+.apa-resources{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.apa-link{font-size:0.78rem;color:var(–accent);text-decoration:none;border:1px solid rgba(126,184,247,0.2);border-radius:50px;padding:3px 10px;transition:all 0.2s;}
+.apa-link:hover{background:rgba(126,184,247,0.1);}
+.btn-add-source{background:var(–surface);border:2px dashed var(–border);border-radius:var(–radius);padding:14px;width:100%;cursor:pointer;color:var(–text-muted);font-family:‘Nunito’,sans-serif;font-weight:600;font-size:0.9rem;transition:all 0.2s;margin-bottom:16px;}
+.btn-add-source:hover{border-color:var(–accent);color:var(–accent);}
+
+/* REVIEW */
+.review-card{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);padding:18px;margin-bottom:16px;}
+.review-card h3{font-family:‘Nunito’,sans-serif;font-weight:700;font-size:0.95rem;color:var(–accent);margin-bottom:10px;}
+.review-content{font-size:0.93rem;line-height:1.85;color:var(–text-muted);white-space:pre-wrap;word-break:break-word;position:relative;}
+.review-content.ruler-on{background:repeating-linear-gradient(to bottom,transparent,transparent calc(1.85em - 1px),var(–ruler) calc(1.85em - 1px),var(–ruler) 1.85em);background-size:100% 1.85em;}
+.bionic-word b{font-weight:800;color:var(–text);}
+.section-title{font-family:‘Nunito’,sans-serif;font-weight:700;font-size:0.78rem;text-transform:uppercase;letter-spacing:1.5px;color:var(–text-muted);margin-bottom:10px;}
+.export-btn{background:var(–surface2);border:1px solid var(–border);border-radius:var(–radius-sm);color:var(–text);font-family:‘Nunito’,sans-serif;font-weight:600;font-size:0.88rem;padding:9px 18px;cursor:pointer;transition:all 0.2s;margin-right:8px;margin-top:10px;}
+.export-btn:hover{border-color:var(–accent);color:var(–accent);}
+
+/* 3 THINGS OVERLAY */
+.three-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;}
+.three-overlay.hidden{display:none;}
+.three-box{background:var(–surface);border-radius:var(–radius);padding:32px;max-width:420px;width:100%;}
+.three-box h2{font-family:‘Nunito’,sans-serif;font-weight:800;font-size:1.2rem;margin-bottom:6px;}
+.three-box p{color:var(–text-muted);font-size:0.88rem;margin-bottom:20px;line-height:1.6;}
+.three-input{width:100%;background:var(–surface2);border:1px solid var(–border);border-radius:var(–radius-sm);padding:10px 12px;color:var(–text);font-family:‘Atkinson Hyperlegible’,sans-serif;font-size:0.95rem;outline:none;margin-bottom:8px;}
+.three-input::placeholder{color:var(–text-muted);}
+.intention-reflect{background:rgba(126,184,247,0.08);border:1px solid rgba(126,184,247,0.2);border-radius:var(–radius-sm);padding:12px;margin-bottom:16px;font-size:0.85rem;color:var(–text-muted);line-height:1.6;display:none;}
+.intention-reflect strong{color:var(–accent);}
+
+/* CONFUSION */
+.confusion-zone{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:100;}
+.confusion-btn{background:linear-gradient(135deg,var(–confusion),#f97316);border:none;border-radius:50px;color:white;font-family:‘Nunito’,sans-serif;font-weight:800;font-size:0.95rem;padding:13px 26px;cursor:pointer;box-shadow:0 4px 24px rgba(251,146,60,0.4);transition:all 0.2s;display:flex;align-items:center;gap:8px;}
+.confusion-btn:hover{transform:scale(1.05);}
+.confusion-btn:active{transform:scale(0.97);}
+.confusion-count{background:rgba(255,255,255,0.25);border-radius:50px;padding:2px 9px;font-size:0.82rem;}
+.confusion-log{margin-top:20px;}
+.confusion-item{background:var(–surface);border:1px solid rgba(251,146,60,0.2);border-left:3px solid var(–confusion);border-radius:var(–radius-sm);padding:10px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;animation:slideIn 0.3s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+.confusion-timestamp{font-size:0.78rem;color:var(–confusion);font-weight:600;white-space:nowrap;margin-top:2px;}
+.confusion-note-input{flex:1;background:transparent;border:none;color:var(–text);font-family:‘Atkinson Hyperlegible’,sans-serif;font-size:0.88rem;outline:none;resize:none;line-height:1.5;}
+.confusion-note-input::placeholder{color:var(–text-muted);font-style:italic;}
+
+/* TOOLS */
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;}
+.tool-card{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);padding:14px;text-decoration:none;color:var(–text);transition:all 0.2s;display:block;}
+.tool-card:hover{border-color:var(–accent);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
+.tool-icon{font-size:1.6rem;margin-bottom:6px;}
+.tool-name{font-family:‘Nunito’,sans-serif;font-weight:700;font-size:0.95rem;margin-bottom:3px;}
+.tool-desc{font-size:0.8rem;color:var(–text-muted);line-height:1.5;}
+.tool-tag{display:inline-block;margin-top:6px;font-size:0.7rem;background:rgba(126,184,247,0.12);color:var(–accent);border-radius:50px;padding:2px 9px;font-weight:600;}
+
+/* TOAST */
+.toast{position:fixed;top:20px;right:20px;background:var(–confusion);color:white;font-family:‘Nunito’,sans-serif;font-weight:700;font-size:0.88rem;padding:11px 18px;border-radius:var(–radius-sm);z-index:400;opacity:0;transform:translateY(-6px);transition:all 0.3s;pointer-events:none;max-width:280px;}
+.toast.show{opacity:1;transform:translateY(0);}
+
+*:focus-visible{outline:2px solid var(–accent);outline-offset:2px;}
+@media(max-width:560px){
+.cornell-grid,.source-card-body,.scan-card-grid{grid-template-columns:1fr;}
+.cornell-cue,.cornell-main{grid-column:1;}
+.cornell-summary{grid-column:1;}
+.source-col:first-child,.scan-col:first-child{border-right:none;border-bottom:1px solid var(–border);}
+}
+
+/* VISUAL NOTES */
+.visual-panel{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);padding:16px;}
+.visual-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.vt-btn{background:var(–surface2);border:1px solid var(–border);border-radius:var(–radius-sm);padding:7px 13px;cursor:pointer;font-size:0.82rem;color:var(–text-muted);font-family:‘Nunito’,sans-serif;font-weight:600;transition:all 0.2s;white-space:nowrap;}
+.vt-btn:hover{border-color:var(–accent);color:var(–accent);}
+.vt-btn.active{border-color:var(–accent);color:var(–accent);background:rgba(126,184,247,0.12);}
+.vt-sep{width:1px;height:24px;background:var(–border);flex-shrink:0;}
+.vt-color{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform 0.15s;flex-shrink:0;}
+.vt-color:hover{transform:scale(1.15);}
+.vt-color.active{border-color:var(–text);}
+.vt-size{background:var(–surface2);border:1px solid var(–border);border-radius:var(–radius-sm);padding:5px 8px;color:var(–text);font-size:0.82rem;outline:none;cursor:pointer;width:60px;}
+.visual-canvas-wrap{position:relative;border-radius:var(–radius-sm);overflow:hidden;touch-action:none;}
+#visualCanvas{display:block;width:100%;cursor:crosshair;border-radius:var(–radius-sm);}
+.pixabay-section{margin-top:14px;}
+.pixabay-search-row{display:flex;gap:8px;margin-bottom:10px;}
+.pixabay-input{flex:1;background:var(–surface2);border:1px solid var(–border);border-radius:var(–radius-sm);padding:9px 12px;color:var(–text);font-family:‘Atkinson Hyperlegible’,sans-serif;font-size:0.9rem;outline:none;}
+.pixabay-input::placeholder{color:var(–text-muted);}
+.pixabay-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;max-height:200px;overflow-y:auto;}
+.pixabay-img{width:100%;height:70px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;}
+.pixabay-img:hover{border-color:var(–accent);transform:scale(1.03);}
+.pixabay-empty{color:var(–text-muted);font-size:0.85rem;padding:16px 0;text-align:center;}
+.upload-img-label{cursor:pointer;}
 </style>
+
 </head>
 <body>
 
+<!-- CHECK-IN OVERLAY -->
+
+<div class="checkin-overlay" id="checkinOverlay">
+  <div class="checkin-box">
+    <h2>Hey — how are you right now?</h2>
+    <p>Take a second. Your answer shapes how the app shows up for you today.</p>
+    <div class="checkin-options">
+      <div class="checkin-opt" data-state="calm">😌<span>Calm</span></div>
+      <div class="checkin-opt" data-state="scattered">🌀<span>Scattered</span></div>
+      <div class="checkin-opt" data-state="overwhelmed">🌊<span>Overwhelmed</span></div>
+    </div>
+    <div class="intention-area">
+      <span class="intention-label">📌 What do you need from this session?</span>
+      <textarea class="intention-input" id="intentionInput" rows="2" placeholder="e.g. Understand the main argument of chapter 3..."></textarea>
+    </div>
+    <button class="btn-go" id="checkinGo">Let's go ✦</button>
+  </div>
+</div>
+
+<!-- 3 THINGS OVERLAY -->
+
+<div class="three-overlay hidden" id="threeOverlay">
+  <div class="three-box">
+    <h2>Before you review your notes…</h2>
+    <p>Without looking — what are 3 things you actually took in? This moment of recall is where real learning locks in.</p>
+    <div class="intention-reflect" id="intentionReflect"></div>
+    <input class="three-input" id="thing1" type="text" placeholder="1. ">
+    <input class="three-input" id="thing2" type="text" placeholder="2. ">
+    <input class="three-input" id="thing3" type="text" placeholder="3. ">
+    <button class="btn-go" id="threeGo" style="margin-top:8px">Show me my notes →</button>
+  </div>
+</div>
+
 <div class="app">
-  <div class="header">
+  <div class="topbar">
     <div class="logo">✦ Flux Notes</div>
-    <div class="tagline">Your brain. Your way of thinking.</div>
+    <div class="top-controls">
+      <button class="icon-btn" id="themeBtn">☀️ Day</button>
+      <button class="icon-btn" id="ambientToggle">🔉 Sound</button>
+    </div>
+  </div>
+
+  <div class="ambient-bar" id="ambientBar">
+    <span style="font-size:0.85rem;color:var(--text-muted)">Background sound:</span>
+    <button class="ambient-btn" data-freq="brown">🟤 Brown noise</button>
+    <button class="ambient-btn" data-freq="white">⬜ White noise</button>
+    <button class="ambient-btn" data-freq="off">✕ Off</button>
   </div>
 
   <div class="session-bar">
-    <input class="session-input" id="sessionName" type="text" placeholder="What are you studying today?" aria-label="Session name" />
-    <div class="session-indicator" id="sessionIndicator"><span class="dot-live"></span> Live</div>
+    <input class="session-input" id="sessionName" type="text" placeholder="Session name..." aria-label="Session name"/>
+    <div class="intention-pill hidden" id="intentionPill"></div>
+    <div class="session-indicator" id="sessionIndicator"><span class="dot-live"></span>Live</div>
     <button class="btn-start" id="startBtn">Start Session</button>
   </div>
 
-  <div class="mode-selector" role="tablist" aria-label="Note-taking modes">
-    <button class="mode-btn active" data-mode="free" role="tab" aria-selected="true">✏️ Free Notes</button>
-    <button class="mode-btn" data-mode="cornell" role="tab" aria-selected="false">📋 Cornell</button>
-    <button class="mode-btn" data-mode="voice" role="tab" aria-selected="false">🎙️ Voice</button>
-    <button class="mode-btn" data-mode="review" role="tab" aria-selected="false">🔍 Review</button>
-    <button class="mode-btn" data-mode="tools" role="tab" aria-selected="false">🔗 Tools</button>
+  <div class="mode-selector" role="tablist">
+    <button class="mode-btn active" data-mode="free">✏️ Free Notes</button>
+    <button class="mode-btn" data-mode="cornell">📋 Cornell</button>
+    <button class="mode-btn" data-mode="voice">🎙️ Voice</button>
+    <button class="mode-btn" data-mode="scan">📷 Scan</button>
+    <button class="mode-btn" data-mode="research">🔬 Research</button>
+    <button class="mode-btn" data-mode="visual">🎨 Visual Notes</button>
+    <button class="mode-btn" data-mode="review">🔍 Review</button>
+    <button class="mode-btn" data-mode="tools">🔗 Tools</button>
   </div>
 
   <!-- FREE NOTES -->
 
   <div class="panel active" id="panel-free">
     <div class="note-area">
-      <textarea class="note-textarea" id="freeNotes" placeholder="Just start writing. No rules. No judgment. Your thoughts belong here..." aria-label="Free notes"></textarea>
+      <textarea class="note-textarea" id="freeNotes" placeholder="Just start writing. No rules. No judgment. Your thoughts belong here…"></textarea>
     </div>
     <div class="confusion-log" id="confusionLog-free"></div>
   </div>
@@ -171,15 +329,15 @@
     <div class="cornell-grid">
       <div class="cornell-cue">
         <span class="cornell-label">❓ Questions &amp; Cues</span>
-        <textarea class="cornell-ta" id="cornellCue" placeholder="Key questions, things to come back to, words you don't know..." aria-label="Cornell cues"></textarea>
+        <textarea class="cornell-ta" id="cornellCue" placeholder="Key questions, things to come back to, words you don't know…"></textarea>
       </div>
       <div class="cornell-main">
         <span class="cornell-label">📝 Main Notes</span>
-        <textarea class="cornell-ta" id="cornellMain" placeholder="Your main notes during the lecture. Don't worry about it being perfect..." aria-label="Cornell main notes"></textarea>
+        <textarea class="cornell-ta" id="cornellMain" placeholder="Your main notes. Don't worry about it being perfect…"></textarea>
       </div>
       <div class="cornell-summary">
         <span class="cornell-label">💡 Summary — fill this in after the lecture</span>
-        <textarea class="cornell-ta summary" id="cornellSummary" placeholder="In your own words: what were the 3 key things from this lecture?" aria-label="Cornell summary"></textarea>
+        <textarea class="cornell-ta summary" id="cornellSummary" placeholder="In your own words: what were the 3 key things from this lecture?"></textarea>
       </div>
     </div>
     <div class="confusion-log" id="confusionLog-cornell"></div>
@@ -191,296 +349,794 @@
     <div class="voice-panel">
       <button class="voice-btn" id="voiceBtn" aria-label="Record voice note">🎙️</button>
       <div class="voice-status" id="voiceStatus">Tap to record a voice note</div>
-      <p style="font-size:0.85rem;color:var(--text-muted);max-width:320px;margin:0 auto;line-height:1.6;">
-        When typing feels like too much — just speak. Your thoughts are valid however they come out.
-      </p>
+      <p style="font-size:0.83rem;color:var(--text-muted);max-width:300px;margin:0 auto;line-height:1.6;">When typing feels like too much — just speak.</p>
       <div class="voice-recordings" id="voiceRecordings"></div>
     </div>
     <div class="confusion-log" id="confusionLog-voice"></div>
   </div>
 
+  <!-- SCAN -->
+
+  <div class="panel" id="panel-scan">
+    <div class="scan-panel">
+      <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:14px;line-height:1.6;">Point your camera at a slide or page. Tap <strong>Capture</strong> to grab the text and add your own notes alongside it.</p>
+      <div class="scan-header">
+        <button class="btn-scan" id="startCameraBtn">📷 Start Camera</button>
+        <button class="btn-scan" id="captureBtn" style="display:none">⚡ Capture</button>
+        <button class="btn-secondary" id="stopCameraBtn" style="display:none">✕ Stop</button>
+        <label class="btn-secondary" style="cursor:pointer">📁 Upload Image<input type="file" id="imageUpload" accept="image/*" style="display:none"></label>
+      </div>
+      <video id="cameraPreview" autoplay playsinline></video>
+      <canvas id="scanCanvas"></canvas>
+      <div class="scan-cards" id="scanCards">
+        <div class="scan-empty">No captures yet — start your camera or upload an image of a slide.</div>
+      </div>
+    </div>
+    <div class="confusion-log" id="confusionLog-scan"></div>
+  </div>
+
+  <!-- RESEARCH -->
+
+  <div class="panel" id="panel-research">
+    <div class="research-anchor">
+      <span class="anchor-label">📌 Your assignment question — stays visible the whole time</span>
+      <input class="anchor-input" id="assignmentQ" type="text" placeholder="Type your assignment question or focus here…">
+    </div>
+    <div class="source-cards" id="sourceCards"></div>
+    <button class="btn-add-source" id="addSourceBtn">+ Add a source</button>
+    <div class="confusion-log" id="confusionLog-research"></div>
+  </div>
+
+  <!-- VISUAL NOTES -->
+
+  <div class="panel" id="panel-visual">
+    <div class="visual-panel">
+      <div class="visual-toolbar">
+        <button class="vt-btn active" id="vt-draw" title="Draw">✏️ Draw</button>
+        <button class="vt-btn" id="vt-text" title="Add text label">T Text</button>
+        <button class="vt-btn" id="vt-erase" title="Eraser">⌫ Erase</button>
+        <div class="vt-sep"></div>
+        <span style="font-size:0.78rem;color:var(--text-muted);font-family:'Nunito',sans-serif;">Size</span>
+        <select class="vt-size" id="vt-size-select">
+          <option value="3">Thin</option>
+          <option value="6" selected>Medium</option>
+          <option value="12">Thick</option>
+          <option value="24">Bold</option>
+        </select>
+        <div class="vt-sep"></div>
+        <div class="vt-color active" style="background:#7eb8f7;" data-color="#7eb8f7" title="Blue"></div>
+        <div class="vt-color" style="background:#a78bfa;" data-color="#a78bfa" title="Purple"></div>
+        <div class="vt-color" style="background:#6ee7b7;" data-color="#6ee7b7" title="Green"></div>
+        <div class="vt-color" style="background:#fb923c;" data-color="#fb923c" title="Orange"></div>
+        <div class="vt-color" style="background:#f9a8d4;" data-color="#f9a8d4" title="Pink"></div>
+        <div class="vt-color" style="background:#e8eaf0;" data-color="#e8eaf0" title="White"></div>
+        <div class="vt-sep"></div>
+        <button class="vt-btn" id="vt-clear" title="Clear canvas">🗑️ Clear</button>
+        <button class="vt-btn" id="vt-save-png" title="Download as image">⬇️ Save Image</button>
+        <label class="vt-btn upload-img-label" title="Upload an image to canvas">📁 Add Image<input type="file" id="vt-upload" accept="image/*" style="display:none"></label>
+      </div>
+      <div class="visual-canvas-wrap" id="visualCanvasWrap">
+        <canvas id="visualCanvas"></canvas>
+      </div>
+      <div class="pixabay-section">
+        <div class="section-title" style="margin-bottom:8px">🖼️ Search free images to add to your canvas (Pixabay)</div>
+        <div class="pixabay-search-row">
+          <input class="pixabay-input" id="pixabayInput" type="text" placeholder="Search e.g. brain, photosynthesis, war, diagram…">
+          <button class="vt-btn" id="pixabaySearchBtn" style="padding:9px 16px;">Search</button>
+        </div>
+        <div class="pixabay-grid" id="pixabayGrid">
+          <div class="pixabay-empty">Search for an image above to find and add it to your canvas.</div>
+        </div>
+      </div>
+    </div>
+    <div class="confusion-log" id="confusionLog-visual"></div>
+  </div>
+
   <!-- REVIEW -->
 
   <div class="panel" id="panel-review">
-    <div class="review-section">
-      <div class="review-card">
-        <h3>Free Notes</h3>
-        <div class="review-content" id="review-free">—</div>
-      </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+      <span class="section-title" style="margin:0">Reading aids:</span>
+      <button class="icon-btn" id="bionicBtn">⚡ Bionic Reading</button>
+      <button class="icon-btn" id="rulerBtn">📏 Reading Ruler</button>
     </div>
-    <div class="review-section">
-      <div class="review-card">
-        <h3>Cornell — Cues &amp; Questions</h3>
-        <div class="review-content" id="review-cue">—</div>
-        <h3 style="margin-top:16px">Cornell — Main Notes</h3>
-        <div class="review-content" id="review-main">—</div>
-        <h3 style="margin-top:16px">Cornell — Summary</h3>
-        <div class="review-content" id="review-summary">—</div>
-      </div>
+    <div class="review-card">
+      <h3>Free Notes</h3>
+      <div class="review-content" id="review-free">—</div>
     </div>
-    <div class="review-section">
-      <div class="section-title">🟠 Confusion Moments — find these points in your lecture recording</div>
+    <div class="review-card">
+      <h3>Cornell — Cues</h3>
+      <div class="review-content" id="review-cue">—</div>
+      <h3 style="margin-top:14px">Cornell — Main Notes</h3>
+      <div class="review-content" id="review-main">—</div>
+      <h3 style="margin-top:14px">Cornell — Summary</h3>
+      <div class="review-content" id="review-summary">—</div>
+    </div>
+    <div class="review-card">
+      <h3>3 Things I Remembered</h3>
+      <div class="review-content" id="review-three">—</div>
+    </div>
+    <div class="review-card">
+      <div class="section-title">🟠 Confusion Moments — find these in your recording</div>
       <div id="review-confusion"></div>
     </div>
     <button class="export-btn" id="copyBtn">📋 Copy All Notes</button>
-    <button class="export-btn" id="downloadBtn">⬇️ Download as Text</button>
+    <button class="export-btn" id="downloadBtn">⬇️ Download</button>
   </div>
 
   <!-- TOOLS -->
 
   <div class="panel" id="panel-tools">
-    <div class="section-title" style="margin-bottom:16px">Specialist tools — each one built for different needs</div>
+    <div class="section-title" style="margin-bottom:14px">Specialist tools for different needs</div>
     <div class="tools-grid">
-      <a href="https://otter.ai" target="_blank" rel="noopener" class="tool-card">
-        <div class="tool-icon">🎧</div>
-        <div class="tool-name">Otter.ai</div>
-        <div class="tool-desc">Live transcription of lectures. Never miss a word even when focus drifts.</div>
-        <span class="tool-tag">ADHD · Dyslexia</span>
-      </a>
-      <a href="https://ankiweb.net" target="_blank" rel="noopener" class="tool-card">
-        <div class="tool-icon">🃏</div>
-        <div class="tool-name">Anki</div>
-        <div class="tool-desc">Spaced repetition flashcards. Review at exactly the right moment for memory.</div>
-        <span class="tool-tag">ADHD · All</span>
-      </a>
-      <a href="https://speechify.com" target="_blank" rel="noopener" class="tool-card">
-        <div class="tool-icon">🔊</div>
-        <div class="tool-name">Speechify</div>
-        <div class="tool-desc">Turns any text into speech. Research papers, notes, anything — listen instead of read.</div>
-        <span class="tool-tag">Dyslexia · Autism</span>
-      </a>
-      <a href="https://www.mindmeister.com" target="_blank" rel="noopener" class="tool-card">
-        <div class="tool-icon">🕸️</div>
-        <div class="tool-name">MindMeister</div>
-        <div class="tool-desc">Visual mind mapping. For thinkers who work in webs, not lines.</div>
-        <span class="tool-tag">Autism · Visual thinkers</span>
-      </a>
-      <a href="https://www.naturalreaders.com" target="_blank" rel="noopener" class="tool-card">
-        <div class="tool-icon">📖</div>
-        <div class="tool-name">Natural Reader</div>
-        <div class="tool-desc">Free text-to-speech with dyslexia-friendly fonts and reading overlays.</div>
-        <span class="tool-tag">Dyslexia</span>
-      </a>
-      <a href="https://notion.so" target="_blank" rel="noopener" class="tool-card">
-        <div class="tool-icon">🗂️</div>
-        <div class="tool-name">Notion</div>
-        <div class="tool-desc">Connect ideas across subjects. Build your own system in your own way.</div>
-        <span class="tool-tag">Organisation</span>
-      </a>
+      <a href="https://otter.ai" target="_blank" rel="noopener" class="tool-card"><div class="tool-icon">🎧</div><div class="tool-name">Otter.ai</div><div class="tool-desc">Live lecture transcription. Never miss a word.</div><span class="tool-tag">ADHD · Dyslexia</span></a>
+      <a href="https://ankiweb.net" target="_blank" rel="noopener" class="tool-card"><div class="tool-icon">🃏</div><div class="tool-name">Anki</div><div class="tool-desc">Spaced repetition flashcards for memory.</div><span class="tool-tag">ADHD · All</span></a>
+      <a href="https://speechify.com" target="_blank" rel="noopener" class="tool-card"><div class="tool-icon">🔊</div><div class="tool-name">Speechify</div><div class="tool-desc">Any text read aloud. Listen instead of read.</div><span class="tool-tag">Dyslexia · Autism</span></a>
+      <a href="https://www.mindmeister.com" target="_blank" rel="noopener" class="tool-card"><div class="tool-icon">🕸️</div><div class="tool-name">MindMeister</div><div class="tool-desc">Visual mind mapping for web thinkers.</div><span class="tool-tag">Autism · Visual</span></a>
+      <a href="https://www.naturalreaders.com" target="_blank" rel="noopener" class="tool-card"><div class="tool-icon">📖</div><div class="tool-name">Natural Reader</div><div class="tool-desc">Free TTS with dyslexia-friendly fonts.</div><span class="tool-tag">Dyslexia</span></a>
+      <a href="https://owl.purdue.edu/owl/research_and_citation/apa_style/apa_formatting_and_style_guide/general_format.html" target="_blank" rel="noopener" class="tool-card"><div class="tool-icon">📚</div><div class="tool-name">Purdue OWL — APA 7</div><div class="tool-desc">The gold standard APA 7 guide. Clear and free.</div><span class="tool-tag">Referencing</span></a>
+      <a href="https://apastyle.apa.org" target="_blank" rel="noopener" class="tool-card"><div class="tool-icon">🏛️</div><div class="tool-name">APA Style Official</div><div class="tool-desc">Official APA blog with examples for tricky sources.</div><span class="tool-tag">Referencing</span></a>
+      <a href="https://notion.so" target="_blank" rel="noopener" class="tool-card"><div class="tool-icon">🗂️</div><div class="tool-name">Notion</div><div class="tool-desc">Connect ideas across subjects your own way.</div><span class="tool-tag">Organisation</span></a>
     </div>
   </div>
 </div>
 
 <div class="confusion-zone">
-  <button class="confusion-btn" id="confusionBtn" aria-label="Log confusion — I lost the thread">
+  <button class="confusion-btn" id="confusionBtn" aria-label="Log confusion moment">
     🤯 Lost the thread <span class="confusion-count" id="confusionCount">0</span>
   </button>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script>
-(function() {
-  var sessionActive = false;
-  var sessionStartTime = null;
-  var confusionPoints = [];
-  var mediaRecorder = null;
-  var audioChunks = [];
-  var isRecording = false;
-  var recordingCount = 0;
+(function(){
+'use strict';
 
-  // --- SESSION ---
-  document.getElementById('startBtn').addEventListener('click', function() {
-    if (!sessionActive) {
-      sessionActive = true;
-      sessionStartTime = new Date();
-      this.textContent = 'End Session';
-      this.style.background = 'linear-gradient(135deg, #6b7280, #4b5563)';
-      document.getElementById('sessionIndicator').classList.add('visible');
-    } else {
-      sessionActive = false;
-      this.textContent = 'Start Session';
-      this.style.background = '';
-      document.getElementById('sessionIndicator').classList.remove('visible');
-      buildReview();
-      switchMode('review');
-    }
+// STATE
+var sessionActive=false,sessionStartTime=null,confusionPoints=[],intentionText='',checkinState='calm';
+var mediaRecorder=null,audioChunks=[],isRecording=false,recordingCount=0;
+var cameraStream=null,sourceCardCount=0,scanCardCount=0;
+var bionicOn=false,rulerOn=false,threeThings=['','',''];
+var audioCtx=null,noiseNode=null,currentNoise='off';
+
+// CHECKIN
+var checkinOverlay=document.getElementById('checkinOverlay');
+document.querySelectorAll('.checkin-opt').forEach(function(o){
+  o.addEventListener('click',function(){
+    document.querySelectorAll('.checkin-opt').forEach(function(x){x.classList.remove('selected');});
+    this.classList.add('selected');
+    checkinState=this.getAttribute('data-state');
   });
-
-  // --- MODE TABS ---
-  document.querySelectorAll('.mode-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      switchMode(this.getAttribute('data-mode'));
-    });
-  });
-
-  function switchMode(mode) {
-    document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
-    document.querySelectorAll('.mode-btn').forEach(function(b) {
-      b.classList.remove('active');
-      b.setAttribute('aria-selected', 'false');
-    });
-    document.getElementById('panel-' + mode).classList.add('active');
-    var activeBtn = document.querySelector('[data-mode="' + mode + '"]');
-    if (activeBtn) { activeBtn.classList.add('active'); activeBtn.setAttribute('aria-selected', 'true'); }
-    if (mode === 'review') buildReview();
+});
+document.getElementById('checkinGo').addEventListener('click',function(){
+  intentionText=document.getElementById('intentionInput').value.trim();
+  checkinOverlay.classList.add('hidden');
+  if(intentionText){
+    var pill=document.getElementById('intentionPill');
+    pill.textContent='📌 '+intentionText;
+    pill.classList.remove('hidden');
   }
-
-  // --- CONFUSION BUTTON ---
-  document.getElementById('confusionBtn').addEventListener('click', function() {
-    var now = new Date();
-    var timeStr;
-    if (sessionStartTime) {
-      var elapsed = Math.floor((now - sessionStartTime) / 1000);
-      var m = Math.floor(elapsed / 60).toString().padStart(2, '0');
-      var s = (elapsed % 60).toString().padStart(2, '0');
-      timeStr = m + ':' + s + ' into session';
-    } else {
-      timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-    }
-    confusionPoints.push({ time: timeStr, note: '', id: Date.now() });
-    document.getElementById('confusionCount').textContent = confusionPoints.length;
-    renderConfusionItems();
-    showToast('Confusion logged ✓ — go back to your recording at this point');
-  });
-
-  function renderConfusionItems() {
-    ['confusionLog-free', 'confusionLog-cornell', 'confusionLog-voice'].forEach(function(id) {
-      var el = document.getElementById(id);
-      if (!el) return;
-      if (confusionPoints.length === 0) { el.innerHTML = ''; return; }
-      var html = '<div class="section-title" style="margin-top:24px">🟠 Confusion Moments — go back to your lecture recording at these points</div>';
-      confusionPoints.forEach(function(cp, i) {
-        html += '<div class="confusion-item">' +
-          '<div class="confusion-timestamp">' + cp.time + '</div>' +
-          '<textarea class="confusion-note-input" data-index="' + i + '" placeholder="What were you confused about? Fill in after reviewing your recording..." rows="2">' + cp.note + '</textarea>' +
-
-```
-      '</div>';
-  });
-  el.innerHTML = html;
-  el.querySelectorAll('.confusion-note-input').forEach(function(ta) {
-    ta.addEventListener('change', function() {
-      var idx = parseInt(this.getAttribute('data-index'));
-      if (confusionPoints[idx]) confusionPoints[idx].note = this.value;
+  if(checkinState==='overwhelmed'){
+    document.querySelectorAll('.mode-btn').forEach(function(b){
+      var m=b.getAttribute('data-mode');
+      if(m!=='free'&&m!=='review')b.style.opacity='0.4';
     });
+    showToast('Simplified mode on — just Free Notes and Review available 💙');
+  }
+});
+
+// THEME
+var isDark=true;
+document.getElementById('themeBtn').addEventListener('click',function(){
+  isDark=!isDark;
+  document.body.classList.toggle('day',!isDark);
+  this.textContent=isDark?'☀️ Day':'🌙 Night';
+});
+
+// AMBIENT SOUND
+document.getElementById('ambientToggle').addEventListener('click',function(){
+  var bar=document.getElementById('ambientBar');
+  bar.classList.toggle('visible');
+  this.classList.toggle('on');
+});
+document.querySelectorAll('.ambient-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.ambient-btn').forEach(function(b){b.classList.remove('active');});
+    this.classList.add('active');
+    playNoise(this.getAttribute('data-freq'));
   });
+});
+function playNoise(type){
+  if(noiseNode){noiseNode.stop();noiseNode=null;}
+  if(type==='off'||!type)return;
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  var bufferSize=2*audioCtx.sampleRate;
+  var buffer=audioCtx.createBuffer(1,bufferSize,audioCtx.sampleRate);
+  var data=buffer.getChannelData(0);
+  if(type==='white'){
+    for(var i=0;i<bufferSize;i++)data[i]=Math.random()*2-1;
+  } else {
+    var b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+    for(var i=0;i<bufferSize;i++){
+      var white=Math.random()*2-1;
+      b0=0.99886*b0+white*0.0555179;b1=0.99332*b1+white*0.0750759;
+      b2=0.96900*b2+white*0.1538520;b3=0.86650*b3+white*0.3104856;
+      b4=0.55000*b4+white*0.5329522;b5=-0.7616*b5-white*0.0168980;
+      data[i]=(b0+b1+b2+b3+b4+b5+b6+white*0.5362)*0.11;b6=white*0.115926;
+    }
+  }
+  var source=audioCtx.createBufferSource();
+  source.buffer=buffer;source.loop=true;
+  var gain=audioCtx.createGain();gain.gain.value=0.15;
+  source.connect(gain);gain.connect(audioCtx.destination);
+  source.start();noiseNode=source;
+}
+
+// SESSION
+document.getElementById('startBtn').addEventListener('click',function(){
+  if(!sessionActive){
+    sessionActive=true;sessionStartTime=new Date();
+    this.textContent='End Session';
+    this.style.background='linear-gradient(135deg,#6b7280,#4b5563)';
+    document.getElementById('sessionIndicator').classList.add('visible');
+  } else {
+    document.getElementById('threeOverlay').classList.remove('hidden');
+    var ir=document.getElementById('intentionReflect');
+    if(intentionText){ir.innerHTML='You wanted to: <strong>'+intentionText+'</strong><br>Did you get there?';ir.style.display='block';}
+  }
+});
+
+// 3 THINGS
+document.getElementById('threeGo').addEventListener('click',function(){
+  threeThings=[document.getElementById('thing1').value,document.getElementById('thing2').value,document.getElementById('thing3').value];
+  document.getElementById('threeOverlay').classList.add('hidden');
+  sessionActive=false;
+  document.getElementById('startBtn').textContent='Start Session';
+  document.getElementById('startBtn').style.background='';
+  document.getElementById('sessionIndicator').classList.remove('visible');
+  buildReview();
+  switchMode('review');
+});
+
+// TABS
+document.querySelectorAll('.mode-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){switchMode(this.getAttribute('data-mode'));});
+});
+function switchMode(mode){
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('active');b.setAttribute('aria-selected','false');});
+  var panel=document.getElementById('panel-'+mode);
+  if(panel)panel.classList.add('active');
+  var btn=document.querySelector('[data-mode="'+mode+'"]');
+  if(btn){btn.classList.add('active');btn.setAttribute('aria-selected','true');}
+  if(mode==='review')buildReview();
+}
+
+// CONFUSION
+document.getElementById('confusionBtn').addEventListener('click',function(){
+  var now=new Date(),timeStr;
+  if(sessionStartTime){
+    var e=Math.floor((now-sessionStartTime)/1000);
+    timeStr=Math.floor(e/60).toString().padStart(2,'0')+':'+( e%60).toString().padStart(2,'0')+' in';
+  } else {
+    timeStr=now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  }
+  confusionPoints.push({time:timeStr,note:'',id:Date.now()});
+  document.getElementById('confusionCount').textContent=confusionPoints.length;
+  renderConfusionItems();
+  showToast('Logged ✓ — go back to your recording at this point');
+});
+function renderConfusionItems(){
+  ['confusionLog-free','confusionLog-cornell','confusionLog-voice','confusionLog-scan','confusionLog-research','confusionLog-visual'].forEach(function(id){
+    var el=document.getElementById(id);if(!el)return;
+    if(!confusionPoints.length){el.innerHTML='';return;}
+    var html='<div class="section-title" style="margin-top:20px">🟠 Confusion Moments</div>';
+    confusionPoints.forEach(function(cp,i){
+      html+='<div class="confusion-item"><div class="confusion-timestamp">'+cp.time+'</div><textarea class="confusion-note-input" data-index="'+i+'" placeholder="What confused you? Fill in after…" rows="2">'+cp.note+'</textarea></div>';
+
+```
+});
+el.innerHTML=html;
+el.querySelectorAll('.confusion-note-input').forEach(function(ta){
+  ta.addEventListener('change',function(){var idx=parseInt(this.getAttribute('data-index'));if(confusionPoints[idx])confusionPoints[idx].note=this.value;});
 });
 ```
 
+});
 }
 
-// — VOICE RECORDING —
-document.getElementById(‘voiceBtn’).addEventListener(‘click’, function() {
-if (!isRecording) {
-navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
-mediaRecorder = new MediaRecorder(stream);
-audioChunks = [];
-mediaRecorder.addEventListener(‘dataavailable’, function(e) { audioChunks.push(e.data); });
-mediaRecorder.addEventListener(‘stop’, function() {
-var blob = new Blob(audioChunks, { type: ‘audio/webm’ });
-var url = URL.createObjectURL(blob);
-recordingCount++;
-var now = new Date().toLocaleTimeString([], {hour:‘2-digit’, minute:‘2-digit’});
-var container = document.getElementById(‘voiceRecordings’);
-if (!container.querySelector(’.section-title’)) {
-var title = document.createElement(‘div’);
-title.className = ‘section-title’;
-title.style.marginBottom = ‘12px’;
-title.textContent = ‘Your voice notes’;
-container.appendChild(title);
-}
-var item = document.createElement(‘div’);
-item.className = ‘recording-item’;
-var audio = document.createElement(‘audio’);
-audio.controls = true;
-audio.src = url;
-item.innerHTML = ‘<span>🎙️ #’ + recordingCount + ‘</span>’;
-item.appendChild(audio);
-var timeEl = document.createElement(‘span’);
-timeEl.className = ‘rec-time’;
-timeEl.textContent = now;
-item.appendChild(timeEl);
-container.appendChild(item);
-stream.getTracks().forEach(function(t) { t.stop(); });
+// VOICE
+document.getElementById(‘voiceBtn’).addEventListener(‘click’,function(){
+if(!isRecording){
+navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+mediaRecorder=new MediaRecorder(stream);audioChunks=[];
+mediaRecorder.addEventListener(‘dataavailable’,function(e){audioChunks.push(e.data);});
+mediaRecorder.addEventListener(‘stop’,function(){
+var blob=new Blob(audioChunks,{type:‘audio/webm’});
+var url=URL.createObjectURL(blob);recordingCount++;
+var now=new Date().toLocaleTimeString([],{hour:‘2-digit’,minute:‘2-digit’});
+var c=document.getElementById(‘voiceRecordings’);
+if(!c.querySelector(’.section-title’)){var t=document.createElement(‘div’);t.className=‘section-title’;t.style.marginBottom=‘10px’;t.textContent=‘Your voice notes’;c.appendChild(t);}
+var item=document.createElement(‘div’);item.className=‘recording-item’;
+var audio=document.createElement(‘audio’);audio.controls=true;audio.src=url;
+item.innerHTML=’<span>🎙️ #’+recordingCount+’</span>’;item.appendChild(audio);
+var te=document.createElement(‘span’);te.className=‘rec-time’;te.textContent=now;item.appendChild(te);
+c.appendChild(item);stream.getTracks().forEach(function(t){t.stop();});
 });
-mediaRecorder.start();
-isRecording = true;
+mediaRecorder.start();isRecording=true;
 document.getElementById(‘voiceBtn’).classList.add(‘recording’);
-document.getElementById(‘voiceBtn’).textContent = ‘⏹️’;
-document.getElementById(‘voiceStatus’).textContent = ‘Recording… tap to stop’;
-}).catch(function() {
-document.getElementById(‘voiceStatus’).textContent = ‘Microphone access needed — check your browser settings’;
-});
+document.getElementById(‘voiceBtn’).textContent=‘⏹️’;
+document.getElementById(‘voiceStatus’).textContent=‘Recording… tap to stop’;
+}).catch(function(){document.getElementById(‘voiceStatus’).textContent=‘Microphone access needed — check browser settings’;});
 } else {
-mediaRecorder.stop();
-isRecording = false;
+mediaRecorder.stop();isRecording=false;
 document.getElementById(‘voiceBtn’).classList.remove(‘recording’);
-document.getElementById(‘voiceBtn’).textContent = ‘🎙️’;
-document.getElementById(‘voiceStatus’).textContent = ‘Saved ✓ Tap to record another’;
+document.getElementById(‘voiceBtn’).textContent=‘🎙️’;
+document.getElementById(‘voiceStatus’).textContent=‘Saved ✓ Tap to record another’;
 }
 });
 
-// — REVIEW —
-function buildReview() {
-document.getElementById(‘review-free’).textContent = document.getElementById(‘freeNotes’).value || ‘No free notes this session.’;
-document.getElementById(‘review-cue’).textContent = document.getElementById(‘cornellCue’).value || ‘—’;
-document.getElementById(‘review-main’).textContent = document.getElementById(‘cornellMain’).value || ‘—’;
-document.getElementById(‘review-summary’).textContent = document.getElementById(‘cornellSummary’).value || ‘—’;
-var confEl = document.getElementById(‘review-confusion’);
-if (confusionPoints.length === 0) {
-confEl.innerHTML = ‘<div class="empty-state"><span class="emoji">✓</span>No confusion moments logged this session.</div>’;
+// CAMERA / SCAN
+document.getElementById(‘startCameraBtn’).addEventListener(‘click’,function(){
+navigator.mediaDevices.getUserMedia({video:{facingMode:‘environment’}}).then(function(stream){
+cameraStream=stream;
+var vid=document.getElementById(‘cameraPreview’);
+vid.srcObject=stream;vid.style.display=‘block’;
+document.getElementById(‘captureBtn’).style.display=‘inline-flex’;
+document.getElementById(‘stopCameraBtn’).style.display=‘inline-flex’;
+document.getElementById(‘startCameraBtn’).style.display=‘none’;
+}).catch(function(){showToast(‘Camera access needed — check browser settings’);});
+});
+document.getElementById(‘stopCameraBtn’).addEventListener(‘click’,function(){
+if(cameraStream)cameraStream.getTracks().forEach(function(t){t.stop();});
+document.getElementById(‘cameraPreview’).style.display=‘none’;
+this.style.display=‘none’;
+document.getElementById(‘captureBtn’).style.display=‘none’;
+document.getElementById(‘startCameraBtn’).style.display=‘inline-flex’;
+});
+document.getElementById(‘captureBtn’).addEventListener(‘click’,function(){
+var vid=document.getElementById(‘cameraPreview’);
+var canvas=document.getElementById(‘scanCanvas’);
+canvas.width=vid.videoWidth;canvas.height=vid.videoHeight;
+canvas.getContext(‘2d’).drawImage(vid,0,0);
+var imgData=canvas.toDataURL(‘image/png’);
+addScanCard(imgData,‘Scanning… (OCR requires Tesseract.js — see note below)’);
+showToast(‘Slide captured ✓’);
+});
+document.getElementById(‘imageUpload’).addEventListener(‘change’,function(e){
+var file=e.target.files[0];if(!file)return;
+var reader=new FileReader();
+reader.onload=function(ev){addScanCard(ev.target.result,‘Image uploaded — add your notes alongside it’);};
+reader.readAsDataURL(file);
+});
+function addScanCard(imgSrc,capturedText){
+scanCardCount++;
+var container=document.getElementById(‘scanCards’);
+var empty=container.querySelector(’.scan-empty’);
+if(empty)empty.remove();
+var card=document.createElement(‘div’);card.className=‘scan-card’;
+card.innerHTML=’<div class="scan-card-grid">’+
+‘<div class="scan-col"><span class="scan-col-label">📸 Captured (’+scanCardCount+’)</span>’+
+‘<img src="'+imgSrc+'" style="width:100%;border-radius:6px;margin-bottom:8px;max-height:140px;object-fit:contain;">’+
+‘<p class="scan-captured" style="font-size:0.78rem;color:var(--text-muted);">’+capturedText+’</p></div>’+
+‘<div class="scan-col"><span class="scan-col-label">✏️ Your Notes</span>’+
+‘<textarea class="scan-note-ta" placeholder="Add your thoughts, questions, or connections here…"></textarea></div>’+
+‘</div>’;
+container.appendChild(card);
+}
+
+// RESEARCH — SOURCE CARDS
+document.getElementById(‘addSourceBtn’).addEventListener(‘click’,function(){addSourceCard();});
+function addSourceCard(){
+sourceCardCount++;
+var container=document.getElementById(‘sourceCards’);
+var id=‘sc’+sourceCardCount;
+var card=document.createElement(‘div’);card.className=‘source-card’;card.id=id;
+card.innerHTML=
+‘<div class="source-card-header">’+
+‘<select class="source-type-select" id="'+id+'-type">’+
+‘<option>Journal Article</option><option>Book</option><option>Website</option>’+
+‘<option>Book Chapter</option><option>YouTube / Video</option><option>Lecture / Slides</option><option>Other</option>’+
+‘</select>’+
+‘<input class="source-title-input" type="text" placeholder="Source title or URL…">’+
+‘<div class="relevance-btns">’+
+‘<button class="rel-btn" data-rel="green" data-card="'+id+'">🟢</button>’+
+‘<button class="rel-btn" data-rel="amber" data-card="'+id+'">🟡</button>’+
+‘<button class="rel-btn" data-rel="red" data-card="'+id+'">🔴</button>’+
+‘</div>’+
+‘</div>’+
+‘<div class="source-card-body">’+
+‘<div class="source-col">’+
+‘<span class="source-col-label">💬 Direct Quote</span>’+
+‘<textarea class="source-ta" id="'+id+'-quote" placeholder="Copy the exact quote here…"></textarea>’+
+‘<span class="source-col-label" style="margin-top:10px">🔄 In Your Own Words</span>’+
+‘<textarea class="source-ta" id="'+id+'-paraphrase" placeholder="Now say it in your own words — this is where the learning happens…"></textarea>’+
+‘</div>’+
+‘<div class="source-col">’+
+‘<span class="source-col-label">💡 Why This Matters</span>’+
+‘<textarea class="source-ta" id="'+id+'-why" placeholder="Why is this relevant to your assignment question?"></textarea>’+
+‘</div>’+
+‘</div>’+
+‘<div class="source-card-footer">’+
+‘<div class="section-title" style="margin-bottom:8px">📎 APA 7 Reference Builder</div>’+
+‘<div class="apa-fields">’+
+‘<input class="apa-input" id="'+id+'-author" placeholder="Author(s) e.g. Smith, J.">’+
+‘<input class="apa-input" id="'+id+'-year" placeholder="Year e.g. 2023">’+
+‘<input class="apa-input" id="'+id+'-title" placeholder="Title of work">’+
+‘<input class="apa-input" id="'+id+'-journal" placeholder="Journal / Publisher">’+
+‘<input class="apa-input" id="'+id+'-vol" placeholder="Vol(issue), pages">’+
+‘<input class="apa-input" id="'+id+'-doi" placeholder="DOI or URL">’+
+‘</div>’+
+‘<div class="apa-preview" id="'+id+'-preview">Fill in the fields above to generate your APA 7 reference →</div>’+
+‘<div class="apa-resources">’+
+‘<a href="https://owl.purdue.edu/owl/research_and_citation/apa_style/apa_formatting_and_style_guide/general_format.html" target="_blank" rel="noopener" class="apa-link">📚 Purdue OWL</a>’+
+‘<a href="https://apastyle.apa.org" target="_blank" rel="noopener" class="apa-link">🏛️ APA Official</a>’+
+‘<a href="https://www.scribbr.com/apa-citation-generator/" target="_blank" rel="noopener" class="apa-link">⚡ Scribbr Generator</a>’+
+‘</div>’+
+‘</div>’;
+container.appendChild(card);
+
+// relevance buttons
+card.querySelectorAll(’.rel-btn’).forEach(function(btn){
+btn.addEventListener(‘click’,function(){
+card.querySelectorAll(’.rel-btn’).forEach(function(b){b.classList.remove(‘active’);});
+this.classList.add(‘active’);
+});
+});
+
+// APA live preview
+[‘author’,‘year’,‘title’,‘journal’,‘vol’,‘doi’].forEach(function(field){
+var input=document.getElementById(id+’-’+field);
+if(input)input.addEventListener(‘input’,function(){updateAPAPreview(id);});
+});
+document.getElementById(id+’-type’).addEventListener(‘change’,function(){updateAPAPreview(id);});
+}
+function updateAPAPreview(id){
+var author=val(id+’-author’),year=val(id+’-year’),title=val(id+’-title’);
+var journal=val(id+’-journal’),vol=val(id+’-vol’),doi=val(id+’-doi’);
+var type=document.getElementById(id+’-type’)?document.getElementById(id+’-type’).value:‘Journal Article’;
+var preview=’’;
+if(author&&year&&title){
+if(type===‘Journal Article’){
+preview=author+’ (’+year+’). ‘+title+’. <em>’+journal+’</em>’;
+if(vol)preview+=’, ‘+vol;
+if(doi)preview+=’. https://doi.org/’+doi.replace(‘https://doi.org/’,’’);
+} else if(type===‘Book’){
+preview=author+’ (’+year+’). <em>’+title+’</em>. ‘+journal+’.’;
+} else if(type===‘Website’){
+preview=author+’ (’+year+’). ‘+title+’. ‘+journal+’. ‘+doi;
+} else if(type===‘Book Chapter’){
+preview=author+’ (’+year+’). ‘+title+’. In <em>’+journal+’</em> (pp. ‘+vol+’). ‘;
+} else if(type===‘YouTube / Video’){
+preview=author+’ [’+journal+’]. (’+year+’, <em>’+title+’</em>) [Video]. YouTube. ‘+doi;
 } else {
-var html = ‘’;
-confusionPoints.forEach(function(cp) {
-html += ‘<div class="confusion-item"><div class="confusion-timestamp">’ + cp.time + ‘</div>’ +
-‘<div style="font-size:0.9rem;color:var(--text-muted);flex:1">’ + (cp.note || ‘Go back to your recording at this point’) + ‘</div></div>’;
+preview=author+’ (’+year+’). ‘+title+’. ‘+journal+’. ‘+doi;
+}
+} else {
+preview=‘Fill in Author, Year, and Title to generate your APA 7 reference →’;
+}
+var el=document.getElementById(id+’-preview’);
+if(el)el.innerHTML=preview;
+}
+function val(id){var el=document.getElementById(id);return el?el.value.trim():’’;}
+
+// BIONIC READING
+document.getElementById(‘bionicBtn’).addEventListener(‘click’,function(){
+bionicOn=!bionicOn;
+this.classList.toggle(‘on’,bionicOn);
+buildReview();
 });
-confEl.innerHTML = html;
+function bionicify(text){
+if(!text||!bionicOn)return escHTML(text);
+return text.split(/\b/).map(function(word){
+if(/[a-zA-Z]/.test(word)&&word.length>1){
+var cut=Math.ceil(word.length*0.45);
+return ‘<b>’+escHTML(word.slice(0,cut))+’</b>’+escHTML(word.slice(cut));
+}
+return escHTML(word);
+}).join(’’);
+}
+function escHTML(s){return s.replace(/&/g,’&’).replace(/</g,’<’).replace(/>/g,’>’);}
+
+// READING RULER
+document.getElementById(‘rulerBtn’).addEventListener(‘click’,function(){
+rulerOn=!rulerOn;
+this.classList.toggle(‘on’,rulerOn);
+document.querySelectorAll(’.review-content’).forEach(function(el){el.classList.toggle(‘ruler-on’,rulerOn);});
+});
+
+// REVIEW
+function buildReview(){
+setReview(‘review-free’,document.getElementById(‘freeNotes’).value||‘No free notes this session.’);
+setReview(‘review-cue’,document.getElementById(‘cornellCue’).value||’—’);
+setReview(‘review-main’,document.getElementById(‘cornellMain’).value||’—’);
+setReview(‘review-summary’,document.getElementById(‘cornellSummary’).value||’—’);
+var three=threeThings.filter(function(t){return t.trim();});
+setReview(‘review-three’,three.length?three.map(function(t,i){return (i+1)+’. ‘+t;}).join(’\n’):‘Not recorded yet.’);
+var confEl=document.getElementById(‘review-confusion’);
+if(!confusionPoints.length){
+confEl.innerHTML=’<p style="color:var(--text-muted);font-size:0.9rem">No confusion moments logged.</p>’;
+} else {
+confEl.innerHTML=confusionPoints.map(function(cp){
+return ‘<div class="confusion-item"><div class="confusion-timestamp">’+cp.time+’</div><div style="font-size:0.88rem;color:var(--text-muted);flex:1">’+(cp.note||‘Review recording at this point’)+’</div></div>’;
+}).join(’’);
 }
 }
+function setReview(id,text){
+var el=document.getElementById(id);if(!el)return;
+el.classList.toggle(‘ruler-on’,rulerOn);
+if(bionicOn){el.innerHTML=’<span class="bionic-word">’+bionicify(text)+’</span>’;}
+else{el.textContent=text;}
+}
 
-// — EXPORT —
-document.getElementById(‘copyBtn’).addEventListener(‘click’, function() {
-var text = buildExportText();
-navigator.clipboard.writeText(text).then(function() { showToast(‘Notes copied to clipboard ✓’); });
+// EXPORT
+document.getElementById(‘copyBtn’).addEventListener(‘click’,function(){
+navigator.clipboard.writeText(buildExport()).then(function(){showToast(‘Notes copied ✓’);});
 });
-
-document.getElementById(‘downloadBtn’).addEventListener(‘click’, function() {
-var session = document.getElementById(‘sessionName’).value || ‘flux-notes’;
-var text = buildExportText();
-var blob = new Blob([text], {type: ‘text/plain’});
-var a = document.createElement(‘a’);
-a.href = URL.createObjectURL(blob);
-a.download = session.replace(/\s+/g, ‘-’) + ‘-notes.txt’;
-a.click();
+document.getElementById(‘downloadBtn’).addEventListener(‘click’,function(){
+var session=document.getElementById(‘sessionName’).value||‘flux-notes’;
+var blob=new Blob([buildExport()],{type:‘text/plain’});
+var a=document.createElement(‘a’);a.href=URL.createObjectURL(blob);
+a.download=session.replace(/\s+/g,’-’)+’-notes.txt’;a.click();
 });
-
-function buildExportText() {
-var session = document.getElementById(‘sessionName’).value || ‘Session’;
-var text = ’FLUX NOTES — ’ + session + ‘\n’ + ‘=’.repeat(40) + ‘\n\n’;
-var free = document.getElementById(‘freeNotes’).value;
-if (free) text += ‘FREE NOTES:\n’ + free + ‘\n\n’;
-var cue = document.getElementById(‘cornellCue’).value;
-var main = document.getElementById(‘cornellMain’).value;
-var sum = document.getElementById(‘cornellSummary’).value;
-if (cue || main || sum) text += ’CORNELL:\nCues: ’ + cue + ’\nNotes: ’ + main + ’\nSummary: ’ + sum + ‘\n\n’;
-if (confusionPoints.length > 0) {
-text += ‘CONFUSION MOMENTS:\n’;
-confusionPoints.forEach(function(cp) {
-text += ’• ’ + cp.time + ’: ’ + (cp.note || ‘Review recording at this point’) + ‘\n’;
+function buildExport(){
+var session=document.getElementById(‘sessionName’).value||‘Session’;
+var text=‘FLUX NOTES — ‘+session+’\n’+’=’.repeat(40)+’\n\n’;
+if(intentionText)text+=‘INTENTION: ‘+intentionText+’\n\n’;
+var free=document.getElementById(‘freeNotes’).value;
+if(free)text+=‘FREE NOTES:\n’+free+’\n\n’;
+var cue=document.getElementById(‘cornellCue’).value;
+var main=document.getElementById(‘cornellMain’).value;
+var sum=document.getElementById(‘cornellSummary’).value;
+if(cue||main||sum)text+=‘CORNELL:\nCues: ‘+cue+’\nNotes: ‘+main+’\nSummary: ‘+sum+’\n\n’;
+var three=threeThings.filter(function(t){return t.trim();});
+if(three.length)text+=‘3 THINGS I REMEMBERED:\n’+three.map(function(t,i){return (i+1)+’. ‘+t;}).join(’\n’)+’\n\n’;
+if(confusionPoints.length){
+text+=‘CONFUSION MOMENTS:\n’;
+confusionPoints.forEach(function(cp){text+=’• ‘+cp.time+’: ‘+(cp.note||‘Review recording’)+’\n’;});
+text+=’\n’;
+}
+// Research sources
+var sources=document.querySelectorAll(’.source-card’);
+if(sources.length){
+text+=‘RESEARCH SOURCES:\n’+’—’.repeat(30)+’\n’;
+sources.forEach(function(card,i){
+var id=card.id;
+var titleEl=card.querySelector(’.source-title-input’);
+var quote=document.getElementById(id+’-quote’);
+var para=document.getElementById(id+’-paraphrase’);
+var why=document.getElementById(id+’-why’);
+var preview=document.getElementById(id+’-preview’);
+text+=’\nSource ‘+(i+1)+’: ‘+(titleEl?titleEl.value:’’)+’\n’;
+if(quote&&quote.value)text+=‘Quote: ‘+quote.value+’\n’;
+if(para&&para.value)text+=‘Paraphrase: ‘+para.value+’\n’;
+if(why&&why.value)text+=‘Relevance: ‘+why.value+’\n’;
+if(preview&&preview.textContent&&!preview.textContent.includes(‘Fill in’))text+=‘APA 7: ‘+preview.textContent+’\n’;
 });
 }
 return text;
 }
 
-// — TOAST —
-function showToast(msg) {
-var t = document.getElementById(‘toast’);
-t.textContent = msg;
-t.classList.add(‘show’);
-setTimeout(function() { t.classList.remove(‘show’); }, 2800);
+// VISUAL NOTES
+(function(){
+var canvas = document.getElementById(‘visualCanvas’);
+var ctx = canvas.getContext(‘2d’);
+var wrap = document.getElementById(‘visualCanvasWrap’);
+var drawing = false;
+var tool = ‘draw’;
+var color = ‘#7eb8f7’;
+var brushSize = 6;
+var lastX = 0, lastY = 0;
+
+function resizeCanvas() {
+var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+canvas.width = wrap.offsetWidth;
+canvas.height = Math.max(420, wrap.offsetWidth * 0.6);
+ctx.fillStyle = ‘#0f1117’;
+if (document.body.classList.contains(‘day’)) ctx.fillStyle = ‘#f5f0e8’;
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+if (imageData.width > 0) ctx.putImageData(imageData, 0, 0);
 }
+resizeCanvas();
+window.addEventListener(‘resize’, resizeCanvas);
+
+// Re-fill background when theme changes
+document.getElementById(‘themeBtn’).addEventListener(‘click’, function() {
+setTimeout(function() {
+var tmp = ctx.getImageData(0, 0, canvas.width, canvas.height);
+ctx.fillStyle = document.body.classList.contains(‘day’) ? ‘#f5f0e8’ : ‘#0f1117’;
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+ctx.putImageData(tmp, 0, 0);
+}, 50);
+});
+
+function getPos(e) {
+var rect = canvas.getBoundingClientRect();
+var scaleX = canvas.width / rect.width;
+var scaleY = canvas.height / rect.height;
+if (e.touches && e.touches.length) {
+return {
+x: (e.touches[0].clientX - rect.left) * scaleX,
+y: (e.touches[0].clientY - rect.top) * scaleY
+};
+}
+return {
+x: (e.clientX - rect.left) * scaleX,
+y: (e.clientY - rect.top) * scaleY
+};
+}
+
+function startDraw(e) {
+e.preventDefault();
+if (tool === ‘text’) return;
+drawing = true;
+var pos = getPos(e);
+lastX = pos.x; lastY = pos.y;
+ctx.beginPath();
+ctx.arc(lastX, lastY, (tool === ‘erase’ ? brushSize * 3 : brushSize) / 2, 0, Math.PI * 2);
+ctx.fillStyle = tool === ‘erase’ ? (document.body.classList.contains(‘day’) ? ‘#f5f0e8’ : ‘#0f1117’) : color;
+ctx.fill();
+}
+
+function moveDraw(e) {
+e.preventDefault();
+if (!drawing) return;
+var pos = getPos(e);
+ctx.beginPath();
+ctx.moveTo(lastX, lastY);
+ctx.lineTo(pos.x, pos.y);
+ctx.strokeStyle = tool === ‘erase’ ? (document.body.classList.contains(‘day’) ? ‘#f5f0e8’ : ‘#0f1117’) : color;
+ctx.lineWidth = tool === ‘erase’ ? brushSize * 3 : brushSize;
+ctx.lineCap = ‘round’;
+ctx.lineJoin = ‘round’;
+ctx.stroke();
+lastX = pos.x; lastY = pos.y;
+}
+
+function endDraw(e) {
+e.preventDefault();
+drawing = false;
+}
+
+function handleTextClick(e) {
+if (tool !== ‘text’) return;
+var pos = getPos(e);
+var label = window.prompt(‘Enter your text label:’);
+if (label && label.trim()) {
+ctx.font = brushSize * 3 + ‘px “Atkinson Hyperlegible”, sans-serif’;
+ctx.fillStyle = color;
+ctx.fillText(label.trim(), pos.x, pos.y);
+}
+}
+
+canvas.addEventListener(‘mousedown’, startDraw);
+canvas.addEventListener(‘mousemove’, moveDraw);
+canvas.addEventListener(‘mouseup’, endDraw);
+canvas.addEventListener(‘mouseleave’, endDraw);
+canvas.addEventListener(‘touchstart’, startDraw, { passive: false });
+canvas.addEventListener(‘touchmove’, moveDraw, { passive: false });
+canvas.addEventListener(‘touchend’, endDraw, { passive: false });
+canvas.addEventListener(‘click’, handleTextClick);
+
+// TOOLBAR TOOL BUTTONS
+[‘vt-draw’,‘vt-text’,‘vt-erase’].forEach(function(id) {
+var btn = document.getElementById(id);
+if (!btn) return;
+btn.addEventListener(‘click’, function() {
+tool = id.replace(‘vt-’,’’);
+document.querySelectorAll(’#vt-draw,#vt-text,#vt-erase’).forEach(function(b){ b.classList.remove(‘active’); });
+this.classList.add(‘active’);
+canvas.style.cursor = tool === ‘erase’ ? ‘cell’ : tool === ‘text’ ? ‘text’ : ‘crosshair’;
+});
+});
+
+// SIZE
+document.getElementById(‘vt-size-select’).addEventListener(‘change’, function() {
+brushSize = parseInt(this.value);
+});
+
+// COLOURS
+document.querySelectorAll(’.vt-color’).forEach(function(el) {
+el.addEventListener(‘click’, function() {
+document.querySelectorAll(’.vt-color’).forEach(function(c){ c.classList.remove(‘active’); });
+this.classList.add(‘active’);
+color = this.getAttribute(‘data-color’);
+});
+});
+
+// CLEAR
+document.getElementById(‘vt-clear’).addEventListener(‘click’, function() {
+if (!window.confirm(‘Clear the whole canvas?’)) return;
+ctx.fillStyle = document.body.classList.contains(‘day’) ? ‘#f5f0e8’ : ‘#0f1117’;
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+});
+
+// SAVE PNG
+document.getElementById(‘vt-save-png’).addEventListener(‘click’, function() {
+var a = document.createElement(‘a’);
+a.download = ‘flux-visual-notes.png’;
+a.href = canvas.toDataURL(‘image/png’);
+a.click();
+});
+
+// UPLOAD IMAGE TO CANVAS
+document.getElementById(‘vt-upload’).addEventListener(‘change’, function(e) {
+var file = e.target.files[0];
+if (!file) return;
+var reader = new FileReader();
+reader.onload = function(ev) {
+var img = new Image();
+img.onload = function() {
+var maxW = canvas.width * 0.6;
+var scale = Math.min(maxW / img.width, 1);
+ctx.drawImage(img, 20, 20, img.width * scale, img.height * scale);
+};
+img.src = ev.target.result;
+};
+reader.readAsDataURL(file);
+this.value = ‘’;
+});
+
+// PIXABAY IMAGE SEARCH
+document.getElementById(‘pixabaySearchBtn’).addEventListener(‘click’, function() { doPixabaySearch(); });
+document.getElementById(‘pixabayInput’).addEventListener(‘keydown’, function(e) {
+if (e.key === ‘Enter’) doPixabaySearch();
+});
+
+function doPixabaySearch() {
+var query = document.getElementById(‘pixabayInput’).value.trim();
+if (!query) return;
+var grid = document.getElementById(‘pixabayGrid’);
+grid.innerHTML = ‘<div class="pixabay-empty">Searching…</div>’;
+var url = ‘https://pixabay.com/api/?key=46494683-e5e2e2d4a3c28e05f8a8a7d8a&q=’ + encodeURIComponent(query) + ‘&image_type=photo&per_page=18&safesearch=true’;
+fetch(url)
+.then(function(r) { return r.json(); })
+.then(function(data) {
+if (!data.hits || !data.hits.length) {
+grid.innerHTML = ‘<div class="pixabay-empty">No images found — try a different search term.</div>’;
+return;
+}
+grid.innerHTML = ‘’;
+data.hits.forEach(function(hit) {
+var img = document.createElement(‘img’);
+img.className = ‘pixabay-img’;
+img.src = hit.previewURL;
+img.alt = hit.tags;
+img.title = ‘Click to add to canvas’;
+img.addEventListener(‘click’, function() {
+var fullImg = new Image();
+fullImg.crossOrigin = ‘anonymous’;
+fullImg.onload = function() {
+var maxW = canvas.width * 0.45;
+var scale = Math.min(maxW / fullImg.width, 1);
+var x = Math.floor(canvas.width / 2 - (fullImg.width * scale) / 2);
+var y = Math.floor(canvas.height / 2 - (fullImg.height * scale) / 2);
+ctx.drawImage(fullImg, x, y, fullImg.width * scale, fullImg.height * scale);
+showToast(‘Image added to canvas ✓’);
+};
+fullImg.onerror = function() {
+showToast(‘Could not load image — try another one’);
+};
+fullImg.src = hit.webformatURL;
+});
+grid.appendChild(img);
+});
+})
+.catch(function() {
+grid.innerHTML = ‘<div class="pixabay-empty">Search failed — check your connection and try again.</div>’;
+});
+}
+})();
+
+// TOAST
+function showToast(msg){
+var t=document.getElementById(‘toast’);
+t.textContent=msg;t.classList.add(‘show’);
+setTimeout(function(){t.classList.remove(‘show’);},2800);
+}
+
+// Add first source card by default
+addSourceCard();
 
 })();
 </script>
